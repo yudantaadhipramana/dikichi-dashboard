@@ -4031,7 +4031,7 @@ function openAttentionDetail(index) {
     ? '<table class="data-table" style="width:100%"><thead><tr><th>DATE</th><th>OUTLET</th><th>PRODUCT</th><th style="text-align:right">SCORE</th><th>FEEDBACK</th></tr></thead><tbody>' +
       evidenceAudits.map(function(a){
         var asc  = getAttrScore(a);
-        var afb  = getAttrFeedback(a);
+        var afb  = (getAttrFeedback(a) || '').trim() || ((a.feedback || '').trim());
         var scoreStr = asc !== null ? asc.toFixed(2) : '-';
         return '<tr>' +
           '<td style="white-space:nowrap;font-size:12px">'+fmtDate(a.timestamp)+'</td>' +
@@ -4045,20 +4045,20 @@ function openAttentionDetail(index) {
 
   // -- KPI CARDS -----------------------------------------------------
   var kpiHtml =
-    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">' +
-      '<div style="background:var(--surface-2,#F8F1F7);border-radius:10px;padding:14px;text-align:center">' +
+    '<div class="modal-stat-row">' +
+      '<div class="modal-stat-card">' +
         '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px">QUALITY SCORE</div>' +
         '<div style="font-size:22px;font-weight:800;color:var(--color-plum,#2E1440)">'+score.toFixed(2)+'<span style="font-size:13px;font-weight:400;color:var(--text-muted)"> / 5</span></div>' +
       '</div>' +
-      '<div style="background:var(--surface-2,#F8F1F7);border-radius:10px;padding:14px;text-align:center">' +
+      '<div class="modal-stat-card">' +
         '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px">GRADE</div>' +
         '<div style="margin-top:4px">'+createGradeBadge(grade)+'</div>' +
       '</div>' +
-      '<div style="background:var(--surface-2,#F8F1F7);border-radius:10px;padding:14px;text-align:center">' +
+      '<div class="modal-stat-card">' +
         '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px">AUDITS</div>' +
         '<div style="font-size:22px;font-weight:800;color:var(--color-plum,#2E1440)">'+audits+'</div>' +
       '</div>' +
-      '<div style="background:var(--surface-2,#F8F1F7);border-radius:10px;padding:14px;text-align:center">' +
+      '<div class="modal-stat-card">' +
         '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px">LOW SCORE RATE</div>' +
         '<div style="font-size:22px;font-weight:800;color:'+(lsr>30?'var(--grade-middle-fail)':'var(--color-plum,#2E1440)')+'">'+lsr.toFixed(1)+'<span style="font-size:13px;font-weight:400;color:var(--text-muted)">%</span></div>' +
       '</div>' +
@@ -4066,7 +4066,7 @@ function openAttentionDetail(index) {
 
   // -- WHY IS THIS A PRIORITY? ---------------------------------------
   var whyHtml =
-    '<div style="background:var(--surface-2,#F8F1F7);border-radius:10px;padding:16px;margin-bottom:20px">' +
+    '<div class="modal-panel">' +
       '<div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--text-muted);margin-bottom:8px">WHY IS THIS A PRIORITY?</div>' +
       '<p style="margin:0 0 10px;color:var(--color-plum,#2E1440);line-height:1.6">' +
         '<strong>'+escapeHtml(attr)+'</strong> is currently classified as <strong>'+grade+'</strong> and '+desc+'.' +
