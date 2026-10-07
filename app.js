@@ -4153,6 +4153,15 @@ function openAttentionDetail(index) {
     return found ? (found.feedback || '') : '';
   }
 
+  function getAttrItem(audit) {
+    if (Array.isArray(audit.attributes)) {
+      var found = audit.attributes.find(function(x){ return x.attribute === attr; });
+      if (found && found.item) return String(found.item);
+    }
+    return audit.item || '';
+  }
+  /** ITEM column source for the AUDIT EVIDENCE table (item the attr score/feedback belongs to). */
+
   // -- AFFECTED PRODUCTS --------------------------------------------
   var productMap = {};
   relevantAudits.forEach(function(a) {
@@ -4227,7 +4236,7 @@ function openAttentionDetail(index) {
   }
 
   var evidenceHtml = evidenceAudits.length
-    ? '<table class="data-table" style="width:100%"><thead><tr><th>DATE</th><th>OUTLET</th><th>PRODUCT</th><th style="text-align:right">SCORE</th><th>FEEDBACK</th></tr></thead><tbody>' +
+    ? '<table class="data-table" style="width:100%"><thead><tr><th>DATE</th><th>OUTLET</th><th>PRODUCT</th><th>ITEM</th><th style="text-align:right">SCORE</th><th>FEEDBACK</th></tr></thead><tbody>' +
       evidenceAudits.map(function(a){
         var asc  = getAttrScore(a);
         var afb  = (getAttrFeedback(a) || '').trim() || ((a.feedback || '').trim());
@@ -4236,6 +4245,7 @@ function openAttentionDetail(index) {
           '<td style="white-space:nowrap;font-size:12px">'+fmtDate(a.timestamp)+'</td>' +
           '<td>'+escapeHtml(a.outlet||'-')+'</td>' +
           '<td>'+escapeHtml(a.product||'-')+'</td>' +
+          '<td style="font-size:12px">'+escapeHtml(getAttrItem(a)||'-')+'</td>' +
           '<td style="text-align:right;font-weight:700;color:'+(asc!==null&&asc<4?'var(--grade-borderline)':'inherit')+'">'+scoreStr+'</td>' +
           '<td style="font-size:12px;color:var(--text-muted)">'+escapeHtml(afb||'-')+'</td>' +
           '</tr>';
@@ -4805,6 +4815,16 @@ function createAuditTable(
 
               <td>
 
+                ${escapeHtml(
+                  audit.item ||
+                  "\u2014"
+                )}
+
+              </td>
+
+
+              <td>
+
                 ${formatScore(
                   audit.score
                 )}
@@ -4850,6 +4870,8 @@ function createAuditTable(
             <th>Outlet</th>
 
             <th>Product</th>
+
+            <th>Item</th>
 
             <th>Score</th>
 
@@ -6598,6 +6620,7 @@ function openUnderBorderlineModal() {
         '<td>' + formatDateTime(a.timestamp) + '</td>' +
         '<td>' + escapeHtml(a.outlet || "\u2014") + '</td>' +
         '<td>' + escapeHtml(a.product || "\u2014") + '</td>' +
+        '<td style="font-size:11px">' + escapeHtml(a.item || "\u2014") + '</td>' +
         '<td class="score-cell ' + getScoreClass(score) + '">' + formatScore(score) + '</td>' +
         '<td>' + createGradeBadge(grade) + '</td>' +
         '<td style="font-size:11px;color:var(--text)">' + attentionText + '</td>' +
@@ -6615,10 +6638,10 @@ function openUnderBorderlineModal() {
     '<div class="table-scroll">' +
       '<table class="data-table">' +
         '<thead><tr>' +
-          '<th>Audit ID</th><th>Date</th><th>Outlet</th><th>Product</th>' +
+          '<th>Audit ID</th><th>Date</th><th>Outlet</th><th>Product</th><th>Item</th>' +
           '<th>Score</th><th>Grade</th><th>Attention</th><th>Feedback</th>' +
         '</tr></thead>' +
-        '<tbody>' + (rows || '<tr><td colspan="8" style="text-align:center;color:var(--text-muted)">No under-borderline audits</td></tr>') + '</tbody>' +
+        '<tbody>' + (rows || '<tr><td colspan="9" style="text-align:center;color:var(--text-muted)">No under-borderline audits</td></tr>') + '</tbody>' +
       '</table>' +
     '</div>';
 
