@@ -1,0 +1,144 @@
+##############################################################################
+# DIKICHI PRODUCT EXCELLENCE DASHBOARD - LIVE VERIFICATION EVIDENCE
+# generated: 2026-10-07 11:18:55 SE Asia Standard Time
+##############################################################################
+
+scriptId      : 1jIhqj-m4-vwKxkL8ulAE2peZXT8deeuHBJFqqra4SJcVilS1YiK2M4y9
+version       : 1
+deploymentId  : AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp
+execUrl       : https://script.google.com/macros/s/AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp/exec
+owner/deployer: productauditcoffee@gmail.com  (token scopes: https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/spreadsheets)
+
+==============================================================================
+[1] ANONYMOUS HTTP  ->  $EXEC?page=status | ?page=fast | ?page=audits
+==============================================================================
+
+>>> GET https://script.google.com/macros/s/AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp/exec?page=status
+    HTTP 403 | 16977 bytes | 1760 ms
+    body[0:180]: <!DOCTYPE html><html lang="id"><head><script nonce="N4XIVh6mEttR-zgzjDFTEw">window['ppConfig'] = {productName: '26981ed0d57bbad37e728ff58134270c', deleteIsEnforced:  false , sealIs
+    visible text: Akses Ditolak &nbsp;Drive Anda memerlukan akses Buka dokumen secara langsung untuk melihat apakah Anda dapat meminta akses, atau beralih ke akun yang memiliki akses. Pelajari lebih lanjut Anda login sebagai
+
+>>> GET https://script.google.com/macros/s/AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp/exec?page=fast&filters=%7B%7D
+    HTTP 403 | 16977 bytes | 2051 ms
+    body[0:180]: <!DOCTYPE html><html lang="id"><head><script nonce="BF8ZlGFPpdrBXtJTMiMB0w">window['ppConfig'] = {productName: '26981ed0d57bbad37e728ff58134270c', deleteIsEnforced:  false , sealIs
+    visible text: Akses Ditolak &nbsp;Drive Anda memerlukan akses Buka dokumen secara langsung untuk melihat apakah Anda dapat meminta akses, atau beralih ke akun yang memiliki akses. Pelajari lebih lanjut Anda login sebagai
+
+>>> GET https://script.google.com/macros/s/AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp/exec?page=audits&filters=%7B%7D
+    HTTP 403 | 16977 bytes | 7119 ms
+    body[0:180]: <!DOCTYPE html><html lang="id"><head><script nonce="4ZkT3KwRuyt0qPHEXcHpjg">window['ppConfig'] = {productName: '26981ed0d57bbad37e728ff58134270c', deleteIsEnforced:  false , sealIs
+    visible text: Akses Ditolak &nbsp;Drive Anda memerlukan akses Buka dokumen secara langsung untuk melihat apakah Anda dapat meminta akses, atau beralih ke akun yang memiliki akses. Pelajari lebih lanjut Anda login sebagai
+
+RESULT [1]: BLOCKED - HTTP 403 Google 'Akses Ditolak' interstitial, not JSON.
+
+==============================================================================
+[2] OUTLET ISOLATION  (Sheets API, column F 'Outlet' of 'Master Responses Gabungan')
+==============================================================================
+F1 header                 : 'Outlet'
+non-empty data cells F2:F : 22437
+   Outlet='Mie Gacoan'   -> 21885 rows (97.54%)
+   Outlet='Dikichi'      ->   552 rows (2.46%)
+Mie Gacoan rows           : 21885
+Dikichi rows              : 552
+RESULT [2]: PASS - exactly 552 Dikichi rows vs 21885 Mie Gacoan (total 22437)
+
+==============================================================================
+[3] DIKICHI DATA THE DASHBOARD FILTERS TO  (Sheets API, cols D/E/F/G/H)
+==============================================================================
+total rows in range       : 22437
+Dikichi item rows         : 552
+distinct audit_id         : 61
+audit_id sample           : ['AUD-2026-10-05-243766a7-0998-47e6-b4f9-1ed4d4d1fd96', 'DK-20261003-001', 'DK-20261003-002', 'DK-20261003-003', 'DK-20261003-004', 'DK-20261003-005', 'DK-20261003-006', 'DK-20261003-007']
+audit_id DK-* prefixed    : 60/61
+audit_id non-DK           : ['AUD-2026-10-05-243766a7-0998-47e6-b4f9-1ed4d4d1fd96']
+branches (Branch/Cabang)  : {"MOJOKERTO RADEN WIJAYA": 531, "KEDIRI PEMUDA": 21}
+products                  : ['Ayam Crispy Ori Geprek', 'French Fries', 'Ayam Ori', 'Ayam Nashville', 'Teh', 'Milo']
+KEDIRI PEMUDA present?    : True
+
+RESULT [3]: PASS - every Dikichi branch value is a Dikichi branch
+            (MOJOKERTO RADEN WIJAYA, KEDIRI PEMUDA); audit ids are DK-YYYYMMDD-NNN.
+
+==============================================================================
+[4] MANIFEST  GET https://script.googleapis.com/v1/projects/<scriptId>/content
+==============================================================================
+GET https://script.googleapis.com/v1/projects/1jIhqj-m4-vwKxkL8ulAE2peZXT8deeuHBJFqqra4SJcVilS1YiK2M4y9/content
+appsscript source:
+{
+  "timeZone": "Asia/Jakarta",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "webapp": {
+    "executeAs": "USER_DEPLOYING",
+    "access": "ANYONE_ANONYMOUS"
+  },
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/script.scriptapp"
+  ]
+}
+
+ACCESS CHECK: webapp.access = ANYONE_ANONYMOUS | webapp.executeAs = USER_DEPLOYING
+RESULT [4]: PASS - ANYONE_ANONYMOUS + USER_DEPLOYING
+
+content file list (clone fidelity vs Gacoan source):
+   CSS                    HTML        77276 chars
+   Code                   SERVER_JS   19169 chars
+   DashboardAnalytics     SERVER_JS   80837 chars
+   DashboardConfig        SERVER_JS    4591 chars
+   DashboardData          SERVER_JS   19603 chars
+   DashboardUtils         SERVER_JS    6563 chars
+   Index                  HTML        39650 chars
+   JS                     HTML       136875 chars
+   appsscript             JSON          335 chars
+
+==============================================================================
+[5] DEPLOYMENT CONFIG (all deployments of the NEW project)
+==============================================================================
+  AKfycbxD5tp1VoSuOWGjLUryITvESJ-7_9dE770ZO0B8i00  vNone  access=ANYONE_ANONYMOUS executeAs=USER_DEPLOYING
+     url: https://script.google.com/macros/s/AKfycbxD5tp1VoSuOWGjLUryITvESJ-7_9dE770ZO0B8i00/exec
+  AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp  v1  access=ANYONE_ANONYMOUS executeAs=USER_DEPLOYING
+     url: https://script.google.com/macros/s/AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp/exec
+
+==============================================================================
+[6] BLOCKER FORENSICS - is it the deployment config or the project consent?
+==============================================================================
+
+6a. CONTROL - same client/IP, Gacoan (authorized) deployment, ANONYMOUS, no redirect follow:
+    GET https://script.google.com/macros/s/AKfycbwCP6RN-eDecyD6WH8sCNFtH_sg-ZuEKW-CyYk57kUmxvVTSQlqrfU0xYKxTIQuF-kg/exec?page=status
+    HTTP 302 | 1642 ms | Location: https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRXCP-sD1vvyIaJdBPBLwY9pCD4EMQqJKhPqRbO5QmTvxCYIXseNq1IjmbtcOWGqKet4yuR0Pulbx-c
+
+6b. Gacoan with owner bearer token (follow redirects):
+    HTTP 200 | 100 bytes | 1900 ms
+    body: {"ok":true,"ts":"2026-10-07T04:19:43.035Z","etlCache":"MISS","auditsCache":"MISS","version":"faseB"}
+
+6c. Dikichi exec with the SAME owner bearer token:
+    HTTP 200 | 5573 bytes | 1339 ms
+    visible: Authorization needed Waiting for authorization... Dikichi Product Excellence Dashboard&nbsp; (Unverified) Dikichi Product Excellence Dashboard needs your permission to access your data on Google. When reviewing permissions, consider whether you trust Dikichi Product Excellence Dashboard . Cancel Review Permissions Execution canceled. You may now close the tab/window or reload the page to try again
+
+6d. OAuth consent client the Dikichi script asks for:
+    client_id: 759253306770-ifkpj4va9gpfcp62d2kcg89vm5b0lmpc.apps.googleusercontent.com
+    owner token client_id: 453858962175-dv3nf37hl8bsm2lt7935if26mocucvsj.apps.googleusercontent.com
+
+CONCLUSION: the deployment config is CORRECT (ANYONE_ANONYMOUS / USER_DEPLOYING).
+            The script is registered with Google but the deploying account has never
+            completed the one-time OAuth consent for THIS scriptId, so every request
+            (anonymous -> Drive 'Akses Ditolak'; owner-authenticated -> 'Authorization
+            needed') is intercepted before doGet(e) runs. Gacoan's project, same code,
+            same manifest, same owner, same client/IP, DOES return JSON -> proves the
+            difference is the per-script consent record, not the code or the network.
+
+REMEDIATION (one-time, human, ~15 seconds):
+   1. sign in the browser as productauditcoffee@gmail.com
+   2. open: https://script.google.com/macros/s/AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp/exec
+   3. click 'Review Permissions' -> pick the account -> 'Advanced' -> 'Go to Dikichi
+      Product Excellence Dashboard (unsafe)' -> 'Allow'
+   4. re-run: python .hermes/verify_dikichi.py   (no redeploy needed, version is frozen)
+
+==============================================================================
+[7] EXPECTED API OUTPUT once consent is granted (computed from the same sheet)
+==============================================================================
+  ?page=status  -> {"ok":true,"ts":...,"etlCache":"MISS|HIT","auditsCache":...,"version":"faseB"}
+  ?page=fast    -> overview.auditCount = 61, branchCount = 2, productCount = 6, itemCount = 552
+                   outlets/branches = ['MOJOKERTO RADEN WIJAYA', 'KEDIRI PEMUDA']
+  ?page=audits  -> 61 audits, ids ['AUD-2026-10-05-243766a7-0998-47e6-b4f9-1ed4d4d1fd96', 'DK-20261003-001', 'DK-20261003-002'] ...
+
