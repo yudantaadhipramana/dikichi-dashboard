@@ -6,17 +6,18 @@
 function doGet(e){
   if(!e.parameter.page || e.parameter.page!='metrics') return;
   const cacheKey='dikichi_metrics';
-  const cache=CacheService.getScriptCache();
-  let metrics=cache.get(cacheKey);
-  if(!metrics){
-    // generate metrics (placeholder)
-    const data={score:65, avgScore:78, count:1234};
-    metrics=JSON.stringify(data);
-    cache.put(cacheKey,metrics,3600);
-  }
-  const result=Utilities.newBlob(metrics,'application/json');
+  const sheet=SpreadsheetApp.getActive().getSheetByName('Master Responses Gabungan');
+  const raw=sheet.getDataRange().getValues();
+  const header=raw[0];
+  const outletIdx=header.indexOf('outlet');
+  const rows=raw.slice(1).filter(r=>r[outletIdx]==='Dikichi');
+  let totalScore=0;let count=0;
+  rows.forEach(r=>{const score=parseFloat(r[header.indexOf('score')]||'0');totalScore+=score;count++;});
+  const avgScore=count?totalScore/count:0;
+  const resultData={score:avgScore, total:count};
+  const metrics=JSON.stringify(resultData);
+  cache.put(cacheKey,metrics,3600);
   return ContentService.createTextOutput(metrics).setMimeType(ContentService.MimeType.JSON).setHeaders({
-    'Cache-Control':'public, max-age=3600',
-    'Content-Encoding':'gzip'
+    'Cache-Control':'public, max-age=3600'
   });
 }

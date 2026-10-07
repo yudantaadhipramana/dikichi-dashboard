@@ -8,9 +8,13 @@ function doGetAudits(e){
   const page=parseInt(e.parameter.page)||1;
   const limit=200;
   const sheet=SpreadsheetApp.getActive().getSheetByName('Master Responses Gabungan');
-  const data=sheet.getDataRange().getValues();
-  const start=(page-1)*limit+1; // skip header
-  const sub=data.slice(start, start+limit);
+  const raw=sheet.getDataRange().getValues();
+  // filter rows where outlet == 'Dikichi'
+  const header=raw[0];
+  const outletIdx=header.indexOf('outlet');
+  const rows=raw.slice(1).filter(r=>r[outletIdx]==='Dikichi');
+  const start=(page-1)*limit;
+  const sub=rows.slice(start, start+limit);
   const result=JSON.stringify(sub);
   return ContentService.createTextOutput(result).setMimeType(ContentService.MimeType.JSON).setHeaders({
     'Cache-Control':'public, max-age=3600'
