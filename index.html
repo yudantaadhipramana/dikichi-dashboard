@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dikichi Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="dashboard">
+    <h1>Dashboard</h1>
+    <div class="kpi-cards">
+      <div class="kpi-card" data-title="Visits" data-value="12,340"></div>
+      <div class="kpi-card" data-title="Sales" data-value="$5,678"></div>
+      <div class="kpi-card" data-title="Orders" data-value="234"></div>
+    </div>
+    <section class="gauge-section">
+      <h2>Performance</h2>
+      <canvas id="gauge" width="200" height="100"></canvas>
+    </section>
+    <section class="matrix-section">
+      <h2>Matrix</h2>
+      <table class="matrix-table">
+        <thead>
+          <tr><th>Date</th><th>Visits</th><th>Orders</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>2026-10-01</td><td>350</td><td>12</td></tr>
+          <tr><td>2026-10-02</td><td>420</td><td>15</td></tr>
+          <tr><td>2026-10-03</td><td>290</td><td>9</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <button id="openModal" class="btn">Open Modal</button>
+    <div id="modal" class="modal">
+      <div class="modal-content">
+        <span id="closeModal" class="close">×</span>
+        <h3>Modal</h3>
+        <p>Sample modal content</p>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
