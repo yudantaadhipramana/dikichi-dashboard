@@ -1,5 +1,5 @@
 /****************************************************
- * MIE GACOAN
+ * DIKICHI
  * PRODUCT EXCELLENCE DASHBOARD
  *
  * DATA SERVICE

@@ -1,10 +1,10 @@
 /****************************************************
- * MIE GACOAN
+ * DIKICHI
  * PRODUCT EXCELLENCE DASHBOARD
  *
  * ANALYTICS ENGINE
  *
- * Hierarki data Mie Gacoan punya TIGA level:
+ * Hierarki data Dikichi punya TIGA level:
  *
  *   Product  ->  Item  ->  Parameter
  *   (Dimsum)     (Siomay)   (Rasa)
@@ -2358,7 +2358,7 @@ const DashboardAnalytics = {
    * BRANCH PERFORMANCE
    *
    * Catatan: kolom "Outlet" pada sheet sumber berisi
-   * nama BRAND ("Mie Gacoan") untuk seluruh baris,
+   * nama BRAND ("Dikichi") untuk seluruh baris,
    * sedangkan nama cabang ada di kolom
    * "Branch / Cabang". Karena itu section ini
    * menghitung per CABANG.

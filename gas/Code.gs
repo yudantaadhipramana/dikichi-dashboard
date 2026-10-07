@@ -1,5 +1,5 @@
 /****************************************************
- * MIE GACOAN
+ * DIKICHI
  * PRODUCT EXCELLENCE DASHBOARD
  *
  * WEB APP ENTRY POINT
@@ -12,7 +12,7 @@
  *   Sheet "Master Responses Gabungan"      (long format)
  *            |
  *            v
- *   DashboardData.getData()   -> filter Outlet = "Mie Gacoan"
+ *   DashboardData.getData()   -> filter Outlet = "Dikichi"
  *                              -> normalisasi field
  *                              -> cache chunked 240s
  *            |
@@ -97,7 +97,7 @@ function doGet(e) {
       if (page === "download") {
 
         return jsonOutput({
-          url: getMasterGacoanDownloadUrl()
+          url: getMasterDikichiDownloadUrl()
         });
 
       }
@@ -630,7 +630,7 @@ function refreshDashboardData(filters) {
  * angka yang diunduh identik dengan dashboard.
  */
 
-function getMasterGacoanDownloadUrl() {
+function getMasterDikichiDownloadUrl() {
 
   const ss =
     SpreadsheetApp
@@ -817,7 +817,7 @@ function testDashboardDataFlow() {
   );
 
   Logger.log(
-    "MIE GACOAN DASHBOARD DATA FLOW TEST"
+    "DIKICHI DASHBOARD DATA FLOW TEST"
   );
 
   Logger.log(
@@ -1127,6 +1127,6 @@ function testDashboardEndpointPayload() {
  * DIAGNOSTIC: fungsi paling sederhana.
  * Mengembalikan status lingkungan tanpa HtmlService / CacheService.
  */
-function pingGacoan() {
+function pingDikichi() {
   return "pong " + new Date().toISOString();
 }

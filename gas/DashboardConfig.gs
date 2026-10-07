@@ -1,5 +1,5 @@
 /****************************************************
- * MIE GACOAN
+ * DIKICHI
  * PRODUCT EXCELLENCE DASHBOARD
  *
  * CONFIGURATION
@@ -18,7 +18,7 @@ const DASHBOARD_CONFIG = {
    * "Master Responses Gabungan"
    *
    * Sheet ini sudah difilter pada level sumber:
-   * Outlet = "Mie Gacoan" untuk SELURUH baris.
+   * Outlet = "Dikichi" untuk SELURUH baris (klon dari dashboard Mie Gacoan).
    * Dashboard tetap memfilter ulang secara eksplisit
    * (defensif) agar tidak pernah menampilkan outlet
    * lain apabila sheet bertambah data.

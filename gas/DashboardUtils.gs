@@ -1,5 +1,5 @@
 /****************************************************
- * MIE GACOAN
+ * DIKICHI
  * PRODUCT EXCELLENCE DASHBOARD
  *
  * UTILITY FUNCTIONS
@@ -133,7 +133,7 @@ function dashboardRound(value, decimals) {
 
 /**
  * Validasi score.
- * Skala penilaian Mie Gacoan = 1..5.
+ * Skala penilaian Dikichi = 1..5.
  */
 function dashboardIsValidScore(score) {
 

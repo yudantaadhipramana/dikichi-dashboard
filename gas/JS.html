@@ -1,7 +1,7 @@
 <script>
 
 /* =========================================================
-   MIE GACOAN
+   DIKICHI
    PRODUCT QUALITY INTELLIGENCE
    FRONTEND CONTROLLER
    VERSION: V3.1
@@ -327,7 +327,7 @@ function handleDashboardError(
 
 
   console.error(
-    "MIE GACOAN DASHBOARD ERROR:",
+    "DIKICHI DASHBOARD ERROR:",
     error
   );
 
@@ -428,7 +428,7 @@ var GAUGE_SEGS = [
   { color: "#D92755", from: 0.00, to: 0.40 },
   { color: "#E84B16", from: 0.40, to: 0.60 },
   { color: "#E58A00", from: 0.60, to: 0.72 },
-  { color: "#129C9A", from: 0.72, to: 0.90 },
+  { color: "#0E9AA7", from: 0.72, to: 0.90 },
   { color: "#009B72", from: 0.90, to: 1.00 }
 ];
 
@@ -448,13 +448,13 @@ function gaugeColor(score) {
 
   var map = {
     "HIGH PASS":        "#009B72",
-    "MIDDLE PASS":      "#129C9A",
+    "MIDDLE PASS":      "#0E9AA7",
     "BORDERLINE PASS":  "#E58A00",
     "MIDDLE FAIL":      "#E84B16",
     "STRONG FAIL":      "#D92755"
   };
 
-  return map[grade] || "#8497A0";
+  return map[grade] || "#8A7A90";
 
 }
 
@@ -539,7 +539,7 @@ function renderPeriodGauge(comparisons) {
     'aria-label="This month ' + current.toFixed(2) + ' of 5">');
 
   parts.push('<path d="' + gaugeArc(GAUGE_CX, GAUGE_CY, GAUGE_R_OUT, GAUGE_R_IN, 0, 1) +
-    '" fill="#EDF2F5"/>');
+    '" fill="#F0E9F1"/>');
 
   GAUGE_SEGS.forEach(function(seg) {
 
@@ -2112,7 +2112,7 @@ function renderQualityTrend(
       series: {
         1: {
           type: "line",
-          color: "#062D4B",
+          color: "#572B7A",
           lineWidth: 2,
           pointSize: 4,
           pointShape: "circle"
@@ -2155,7 +2155,7 @@ function renderQualityTrend(
           textStyle:
             {
               color:
-                "#89939C",
+                "#8B7E92",
 
               fontSize:
                 10
@@ -2195,7 +2195,7 @@ function renderQualityTrend(
           textStyle:
             {
               color:
-                "#89939C",
+                "#8B7E92",
 
               fontSize:
                 10
@@ -2231,7 +2231,7 @@ function renderQualityTrend(
                 true,
 
               color:
-                "#062D4B"
+                "#572B7A"
             }
         },
 
@@ -2274,13 +2274,13 @@ function getGradeHexColor(score) {
 
   var map = {
     "HIGH PASS":       "#009B72",
-    "MIDDLE PASS":     "#129C9A",
+    "MIDDLE PASS":     "#0E9AA7",
     "BORDERLINE PASS": "#E58A00",
     "MIDDLE FAIL":     "#E84B16",
     "STRONG FAIL":     "#D92755"
   };
 
-  return map[grade] || "#8497A0";
+  return map[grade] || "#8A7A90";
 
 }
 
@@ -2389,13 +2389,13 @@ function renderProductTrendChart(productTrend, overallTrend) {
 
   // Product line palette - distinct, strong, non-clash with quality bands
   var palette = [
-    "#062D4B",  // navy
-    "#C847E4",  // purple
-    "#E8A400",  // amber
-    "#0077CC",  // blue
+    "#572B7A",  // purple  (logo)
+    "#D6338F",  // magenta
+    "#F8C000",  // yellow  (logo)
+    "#7B4BC9",  // violet
     "#E84B16",  // red-orange
-    "#00B0C8",  // cyan
-    "#8B5CF6"   // violet
+    "#0E9AA7",  // teal
+    "#FF7CBE"   // pink    (logo)
   ];
 
   var dataTable = new google.visualization.DataTable();
@@ -2487,21 +2487,21 @@ function renderProductTrendChart(productTrend, overallTrend) {
     series: seriesConfig,
     legend: {
       position: "right",
-      textStyle: { fontSize: 11, color: "#1A2B3C", bold: true }
+      textStyle: { fontSize: 11, color: "#2E1440", bold: true }
     },
     chartArea: {
       left: 55, top: 20, right: 160, bottom: 40,
       width: "80%", height: "78%"
     },
     hAxis: {
-      textStyle: { color: "#89939C", fontSize: 10 },
+      textStyle: { color: "#8B7E92", fontSize: 10 },
       slantedText: allDates.length > 12,
       slantedTextAngle: 35
     },
     vAxis: {
       viewWindow: { min: 0, max: 5 },
       ticks: [0, 1, 2, 3, 4, 5],
-      textStyle: { color: "#89939C", fontSize: 10 }
+      textStyle: { color: "#8B7E92", fontSize: 10 }
     },
     tooltip: { textStyle: { fontSize: 11 } },
     animation: { startup: true, duration: 450, easing: "out" }
@@ -2655,16 +2655,16 @@ function renderGradeDistribution(distribution) {
       // percentage
       '<text x="'+textX+'" y="'+(d.y+9)+'"'+
             ' text-anchor="'+anchor+'" font-size="13" font-weight="800"'+
-            ' fill="#1A2B3C">'+d.pct+'</text>'
+            ' fill="#2E1440">'+d.pct+'</text>'
     );
   });
 
   // Center
   var cx=
     '<text x="'+CX+'" y="'+(CY-6)+'" text-anchor="middle"'+
-    ' font-size="28" font-weight="800" fill="#1A2B3C">'+total+'</text>'+
+    ' font-size="28" font-weight="800" fill="#2E1440">'+total+'</text>'+
     '<text x="'+CX+'" y="'+(CY+12)+'" text-anchor="middle"'+
-    ' font-size="9" font-weight="700" letter-spacing="2" fill="#9AA3AD">AUDITS</text>';
+    ' font-size="9" font-weight="700" letter-spacing="2" fill="#9C8FA3">AUDITS</text>';
 
   var svg=
     '<svg viewBox="0 0 '+W+' '+H+'"'+
@@ -3850,29 +3850,29 @@ function openAttentionDetail(index) {
   // -- KPI CARDS -----------------------------------------------------
   var kpiHtml =
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">' +
-      '<div style="background:var(--surface-2,#F5F7FA);border-radius:10px;padding:14px;text-align:center">' +
+      '<div style="background:var(--surface-2,#F8F1F7);border-radius:10px;padding:14px;text-align:center">' +
         '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px">QUALITY SCORE</div>' +
-        '<div style="font-size:22px;font-weight:800;color:var(--color-navy,#0B2545)">'+score.toFixed(2)+'<span style="font-size:13px;font-weight:400;color:var(--text-muted)"> / 5</span></div>' +
+        '<div style="font-size:22px;font-weight:800;color:var(--color-plum,#2E1440)">'+score.toFixed(2)+'<span style="font-size:13px;font-weight:400;color:var(--text-muted)"> / 5</span></div>' +
       '</div>' +
-      '<div style="background:var(--surface-2,#F5F7FA);border-radius:10px;padding:14px;text-align:center">' +
+      '<div style="background:var(--surface-2,#F8F1F7);border-radius:10px;padding:14px;text-align:center">' +
         '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px">GRADE</div>' +
         '<div style="margin-top:4px">'+createGradeBadge(grade)+'</div>' +
       '</div>' +
-      '<div style="background:var(--surface-2,#F5F7FA);border-radius:10px;padding:14px;text-align:center">' +
+      '<div style="background:var(--surface-2,#F8F1F7);border-radius:10px;padding:14px;text-align:center">' +
         '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px">AUDITS</div>' +
-        '<div style="font-size:22px;font-weight:800;color:var(--color-navy,#0B2545)">'+audits+'</div>' +
+        '<div style="font-size:22px;font-weight:800;color:var(--color-plum,#2E1440)">'+audits+'</div>' +
       '</div>' +
-      '<div style="background:var(--surface-2,#F5F7FA);border-radius:10px;padding:14px;text-align:center">' +
+      '<div style="background:var(--surface-2,#F8F1F7);border-radius:10px;padding:14px;text-align:center">' +
         '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px">LOW SCORE RATE</div>' +
-        '<div style="font-size:22px;font-weight:800;color:'+(lsr>30?'var(--grade-middle-fail)':'var(--color-navy,#0B2545)')+'">'+lsr.toFixed(1)+'<span style="font-size:13px;font-weight:400;color:var(--text-muted)">%</span></div>' +
+        '<div style="font-size:22px;font-weight:800;color:'+(lsr>30?'var(--grade-middle-fail)':'var(--color-plum,#2E1440)')+'">'+lsr.toFixed(1)+'<span style="font-size:13px;font-weight:400;color:var(--text-muted)">%</span></div>' +
       '</div>' +
     '</div>';
 
   // -- WHY IS THIS A PRIORITY? ---------------------------------------
   var whyHtml =
-    '<div style="background:var(--surface-2,#F5F7FA);border-radius:10px;padding:16px;margin-bottom:20px">' +
+    '<div style="background:var(--surface-2,#F8F1F7);border-radius:10px;padding:16px;margin-bottom:20px">' +
       '<div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--text-muted);margin-bottom:8px">WHY IS THIS A PRIORITY?</div>' +
-      '<p style="margin:0 0 10px;color:var(--color-navy,#0B2545);line-height:1.6">' +
+      '<p style="margin:0 0 10px;color:var(--color-plum,#2E1440);line-height:1.6">' +
         '<strong>'+escapeHtml(attr)+'</strong> is currently classified as <strong>'+grade+'</strong> and '+desc+'.' +
       '</p>' +
       '<div style="display:flex;align-items:center;gap:8px;font-size:13px">' +
@@ -3883,7 +3883,7 @@ function openAttentionDetail(index) {
   // -- SECTION BUILDER ----------------------------------------------
   function section(title, content) {
     return '<div style="margin-bottom:24px">' +
-      '<div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--text-muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border-light,#E5EAF0)">'+title+'</div>' +
+      '<div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--text-muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border-light,#F0E9F1)">'+title+'</div>' +
       content + '</div>';
   }
 
@@ -5946,7 +5946,7 @@ function dhToggle(id) {
   }
 }
 
-function downloadMasterGacoan() {
+function downloadMasterDikichi() {
 
   google.script.run
 
@@ -5970,7 +5970,7 @@ function downloadMasterGacoan() {
 
     })
 
-    .getMasterGacoanDownloadUrl();
+    .getMasterDikichiDownloadUrl();
 
 }
 
@@ -6032,7 +6032,7 @@ function openOverallQualityModal() {
           '<td class="table-primary">' + escapeHtml(o.outlet || "\u2014") + '</td>' +
           '<td>' +
             '<div style="display:flex;align-items:center;gap:8px">' +
-              '<div style="flex:1;height:6px;background:#eef0f2;border-radius:3px;min-width:60px">' +
+              '<div style="flex:1;height:6px;background:#F1EAF0;border-radius:3px;min-width:60px">' +
                 '<div style="height:6px;border-radius:3px;background:' + color + ';width:' + barW + '%"></div>' +
               '</div>' +
               '<span class="' + getScoreClass(score) + '">' + formatScore(score) + ' / 5</span>' +
@@ -6127,7 +6127,7 @@ function openProductPerformanceModal() {
           '<td class="table-primary">' + escapeHtml(p.product || "\u2014") + '</td>' +
           '<td>' +
             '<div style="display:flex;align-items:center;gap:8px">' +
-              '<div style="flex:1;height:6px;background:#eef0f2;border-radius:3px;min-width:60px">' +
+              '<div style="flex:1;height:6px;background:#F1EAF0;border-radius:3px;min-width:60px">' +
                 '<div style="height:6px;border-radius:3px;background:' + color + ';width:' + barW + '%"></div>' +
               '</div>' +
               '<span class="' + getScoreClass(score) + '">' + formatScore(score) + ' / 5</span>' +
