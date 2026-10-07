@@ -18,7 +18,7 @@ const DASHBOARD_CONFIG = {
    * "Master Responses Gabungan"
    *
    * Sheet ini sudah difilter pada level sumber:
-   * Outlet = "Dikichi" untuk SELURUH baris (klon dari dashboard Mie Gacoan).
+   * Outlet = "Dikichi" untuk SELURUH baris.
    * Dashboard tetap memfilter ulang secara eksplisit
    * (defensif) agar tidak pernah menampilkan outlet
    * lain apabila sheet bertambah data.
