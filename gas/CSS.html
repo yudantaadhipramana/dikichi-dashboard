@@ -263,7 +263,7 @@ input:focus-visible {
     center;
 
   gap:
-    13px;
+    15px;
 
   min-width:
     0;
@@ -363,16 +363,15 @@ input:focus-visible {
     var(--dikichi-purple-soft);
 
   font-size:
-    13px;
-
+    32px;
   line-height:
-    1.2;
+    1.05;
 
   font-weight:
-    800;
+    900;
 
   letter-spacing:
-    0.1em;
+    0.14em;
 
 }
 
@@ -380,13 +379,22 @@ input:focus-visible {
 .brand-subtitle {
 
   margin-top:
-    3px;
+    5px;
 
   color:
     rgba(255, 255, 255, 0.90);
 
   font-size:
-    11px;
+    14px;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.14em;
+
+  text-transform:
+    uppercase;
 
 }
 
@@ -4232,6 +4240,93 @@ th.sort-desc::after {
 }
 
 
+/* ---------------------------------------------------------
+   ITEM DETAIL MODAL - summary header + stats strip
+   --------------------------------------------------------- */
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(
+      135deg,
+      var(--dikichi-pink-soft) 0%,
+      var(--surface-soft) 100%
+    );
+}
+
+.detail-score {
+  flex: 0 0 auto;
+  min-width: 92px;
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.detail-title {
+  color: var(--dikichi-ink);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  overflow-wrap: break-word;
+}
+
+.detail-subtitle {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.detail-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.detail-stat-value {
+  color: var(--dikichi-ink);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.detail-stat-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+
 .feedback-box {
 
   margin-top:
@@ -4824,7 +4919,7 @@ th.sort-desc::after {
   .brand-name {
 
     font-size:
-      10px;
+      22px;
 
   }
 
@@ -4832,7 +4927,7 @@ th.sort-desc::after {
   .brand-subtitle {
 
     font-size:
-      9px;
+      12px;
 
   }
 
@@ -5056,6 +5151,73 @@ th.sort-desc::after {
 
 
   .detail-grid {
+
+    grid-template-columns:
+      1fr;
+
+  }
+
+}
+
+
+/* =========================================================
+   31b. RESPONSIVE - BRAND TEXT + DETAIL SUMMARY
+   ========================================================= */
+
+@media (
+  max-width: 640px
+) {
+
+  .brand-name {
+
+    font-size:
+      22px;
+
+  }
+
+  .brand-subtitle {
+
+    font-size:
+      12px;
+
+  }
+
+  .detail-header {
+
+    flex-wrap:
+      wrap;
+
+  }
+
+  .detail-stats {
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+  }
+
+}
+
+
+@media (
+  max-width: 420px
+) {
+
+  .brand-name {
+
+    font-size:
+      19px;
+
+  }
+
+  .brand-subtitle {
+
+    font-size:
+      11px;
+
+  }
+
+  .detail-stats {
 
     grid-template-columns:
       1fr;
@@ -6363,6 +6525,9 @@ th.sort-desc::after {
 }
 
 .mx-table thead th.mx-cat {
+  width: 168px;
+  min-width: 168px;
+  max-width: 168px;
   background: var(--dikichi-pink-soft);
   color: var(--dikichi-pink-dark);
   letter-spacing: 1.2px;
@@ -6380,9 +6545,9 @@ th.sort-desc::after {
   position: sticky;
   left: 0;
   z-index: 4;
-  width: 104px;
-  min-width: 104px;
-  max-width: 104px;
+  width: 168px;
+  min-width: 168px;
+  max-width: 168px;
   padding: 7px 9px;
   background: var(--dikichi-pink-soft);
   color: var(--dikichi-pink-dark);
@@ -6392,7 +6557,12 @@ th.sort-desc::after {
   text-transform: uppercase;
   text-align: center;
   vertical-align: middle;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: balance;
+  line-height: 1.35;
   border-right: 1px solid #CFE7EF;
   border-bottom: 1px solid #E4EEF3;
 }
@@ -6412,7 +6582,7 @@ th.sort-desc::after {
 
 .mx-table.mx-with-cat td.mx-item {
   position: sticky;
-  left: 104px;
+  left: 168px;
   z-index: 3;
 }
 

@@ -897,6 +897,29 @@ function matrixCell(value) {
 
 }
 
+function matrixPercentCell(value) {
+
+  if (value === null || value === undefined || !isFinite(Number(value))) {
+
+    return '<td class="mx-cell mx-empty">&#8212;</td>';
+
+  }
+
+  var grade = dashboardGrade(value);
+
+  var cls = {
+    "HIGH PASS":        "mx-ex",
+    "MIDDLE PASS":      "mx-good",
+    "BORDERLINE PASS":  "mx-bd",
+    "MIDDLE FAIL":      "mx-ni",
+    "STRONG FAIL":      "mx-fl"
+  }[grade] || "";
+
+  return '<td class="mx-cell ' + cls + '" title="' + grade + '">' +
+    (Number(value) / 5 * 100).toFixed(1) + "%</td>";
+
+}
+
 function matrixHead(months, firstCols) {
 
   var years = matrixYearsOf(months);
@@ -1063,7 +1086,7 @@ function renderBranchMatrix(matrix) {
     html.push('<td class="mx-item mx-first">' + escapeHtml(row.branch) + "</td>");
 
     months.forEach(function(m) {
-      html.push(matrixCell(row.scores ? row.scores[m] : null));
+      html.push(matrixPercentCell(row.scores ? row.scores[m] : null));
     });
 
     html.push("</tr>");
@@ -3609,70 +3632,243 @@ function openProductDetail(
   }
 
 
-  const attributes =
-    Array.isArray(
-      product.attributes
-    )
-      ? product.attributes
+  const productItemNames = {};
+
+  (Array.isArray(product.items) ? product.items : []).forEach(
+    function(entry) {
+
+      if (entry && entry.item) {
+
+        productItemNames[
+          String(entry.item).trim().toLowerCase()
+        ] = true;
+
+      }
+
+    }
+  );
+
+
+  if (product.product) {
+
+    productItemNames[
+      String(product.product).trim().toLowerCase()
+    ] = true;
+
+  }
+
+
+  const allAttributes =
+    DashboardState.data &&
+    Array.isArray(DashboardState.data.attributes)
+      ? DashboardState.data.attributes
       : [];
 
 
-  const rows =
-    attributes
+  const matchedAttributes = allAttributes.filter(
+    function(attribute) {
+
+      if (!attribute || !attribute.items) {
+
+        return false;
+
+      }
+
+
+      return String(attribute.items)
+        .split(",")
+        .some(
+          function(name) {
+
+            return productItemNames[
+              String(name).trim().toLowerCase()
+            ] === true;
+
+          }
+        );
+
+    }
+  );
+
+
+  let breakdown = matchedAttributes.map(
+    function(attribute) {
+
+      return {
+        attribute: attribute.attribute,
+        score: attribute.score,
+        grade: attribute.grade,
+        observations: attribute.observations
+      };
+
+    }
+  );
+
+
+  if (!breakdown.length) {
+
+    const parameterMap = {};
+
+    (Array.isArray(product.items) ? product.items : []).forEach(
+      function(entry) {
+
+        const parameters =
+          entry && Array.isArray(entry.parameters)
+            ? entry.parameters
+            : [];
+
+        parameters.forEach(
+          function(parameter) {
+
+            if (!parameter || !parameter.attribute) {
+
+              return;
+
+            }
+
+
+            const key =
+              String(parameter.attribute).trim().toLowerCase();
+
+            if (!parameterMap[key]) {
+
+              parameterMap[key] = {
+                attribute: parameter.attribute,
+                scores: [],
+                observations: 0
+              };
+
+            }
+
+
+            if (
+              parameter.score !== null &&
+              parameter.score !== undefined &&
+              isFinite(Number(parameter.score))
+            ) {
+
+              parameterMap[key].scores.push(
+                Number(parameter.score)
+              );
+
+            }
+
+
+            if (
+              parameter.observations !== null &&
+              parameter.observations !== undefined &&
+              isFinite(Number(parameter.observations))
+            ) {
+
+              parameterMap[key].observations +=
+                Number(parameter.observations);
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+
+    breakdown = Object.keys(parameterMap)
       .map(
-        function(item) {
+        function(key) {
 
-          return `
+          const entry = parameterMap[key];
 
-            <tr>
+          const avg = entry.scores.length
+            ? entry.scores.reduce(
+                function(sum, value) {
+                  return sum + value;
+                },
+                0
+              ) / entry.scores.length
+            : null;
 
-              <td class="table-primary">
-
-                ${escapeHtml(
-                  item.attribute ||
-                  "\u2014"
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatScore(
-                  item.score
-                )}
-                / 5
-
-              </td>
-
-
-              <td>
-
-                ${createGradeBadge(
-                  item.grade ||
-                  dashboardGrade(
-                    item.score
-                  )
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatNumber(
-                  item.observations
-                )}
-
-              </td>
-
-            </tr>
-
-          `;
+          return {
+            attribute: entry.attribute,
+            score: avg,
+            grade:
+              avg !== null
+                ? dashboardGrade(avg)
+                : "\u2014",
+            observations: entry.observations
+          };
 
         }
       )
-      .join("");
+      .filter(
+        function(entry) {
+          return entry.score !== null;
+        }
+      );
+
+  }
+
+
+  breakdown.sort(
+    function(a, b) {
+      return Number(a.score || 0) - Number(b.score || 0);
+    }
+  );
+
+
+  const rows = breakdown.map(
+    function(item) {
+
+      return `
+
+        <tr>
+
+          <td class="table-primary">
+
+            ${escapeHtml(
+              item.attribute ||
+              "\u2014"
+            )}
+
+          </td>
+
+
+          <td>
+
+            ${formatScore(
+              item.score
+            )}
+            / 5
+
+          </td>
+
+
+          <td>
+
+            ${createGradeBadge(
+              item.grade ||
+              dashboardGrade(
+                item.score
+              )
+            )}
+
+          </td>
+
+
+          <td>
+
+            ${formatNumber(
+              item.observations
+            )}
+
+          </td>
+
+        </tr>
+
+      `;
+
+    }
+  )
+    .join("");
 
 
   openModal(
