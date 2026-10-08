@@ -4239,7 +4239,8 @@ function openAttentionDetail(index) {
     ? '<table class="data-table" style="width:100%"><thead><tr><th>DATE</th><th>OUTLET</th><th>PRODUCT</th><th>ITEM</th><th style="text-align:right">SCORE</th><th>FEEDBACK</th></tr></thead><tbody>' +
       evidenceAudits.map(function(a){
         var asc  = getAttrScore(a);
-        var afb  = (getAttrFeedback(a) || '').trim() || ((a.feedback || '').trim());
+        var afb  = (getAttrFeedback(a) || '').trim() ||
+                   ((a.itemNotes && a.itemNotes[getAttrItem(a)]) || '').trim();
         var scoreStr = asc !== null ? asc.toFixed(2) : '-';
         return '<tr>' +
           '<td style="white-space:nowrap;font-size:12px">'+fmtDate(a.timestamp)+'</td>' +

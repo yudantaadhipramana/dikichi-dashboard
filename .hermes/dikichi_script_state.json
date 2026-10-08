@@ -1,6 +1,6 @@
 {
  "scriptId": "1jIhqj-m4-vwKxkL8ulAE2peZXT8deeuHBJFqqra4SJcVilS1YiK2M4y9",
- "version": 12,
+ "version": 13,
  "deploymentId": "AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp",
  "execUrl": "https://script.google.com/macros/s/AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp/exec",
  "previousDeploymentId": "AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp",
@@ -19,6 +19,11 @@
    "version": 12,
    "desc": "Label DATA SOURCE -> Master Dikichi New (Index mirror)",
    "ts": "2026-10-08T15:46:30"
+  },
+  {
+   "version": 13,
+   "desc": "Feedback per-item (itemNotes) di popup Quality Attention",
+   "ts": "2026-10-08T16:21:20"
   }
  ]
 }

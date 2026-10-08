@@ -918,6 +918,48 @@ const DashboardAnalytics = {
             );
 
 
+          /*
+           * Catatan per ITEM (`Catatan Khusus` di
+           * sheet sumber). Satu audit menguji
+           * beberapa item, jadi catatan digabung
+           * per item — dedup supaya payload tetap
+           * ramping (teks identik tidak diulang
+           * untuk tiap parameter item itu).
+           */
+
+          const itemNotes =
+            {};
+
+
+          rows.forEach(
+            function(row) {
+
+              const text =
+                String(
+                  row.feedback || ""
+                )
+                .trim();
+
+              if (!text) {
+
+                return;
+
+              }
+
+              const key =
+                row.item || "";
+
+              if (!itemNotes[key]) {
+
+                itemNotes[key] =
+                  text;
+
+              }
+
+            }
+          );
+
+
           return {
 
             auditId:
@@ -982,6 +1024,9 @@ const DashboardAnalytics = {
 
             parameterCount:
               rows.length,
+
+            itemNotes:
+              itemNotes,
 
             attributes:
               attributes
