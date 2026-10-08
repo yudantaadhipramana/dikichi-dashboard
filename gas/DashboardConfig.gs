@@ -15,7 +15,13 @@ const DASHBOARD_CONFIG = {
    * DATA SOURCE
    *
    * HANYA SATU sheet yang dipakai:
-   * "Master Responses Gabungan"
+   * "Master Dikichi New"
+   *
+   * Sumber = hasil ETL "Dikichi ETL New"
+   * (script 19Xk6F4weW1kDMnJsQ0TD_KlyrquOIb-8nbrOw04sBWldZlyhPT0z-F0L)
+   * yang menulis ke spreadsheet ini.
+   * Spreadsheet "Master Responses Gabungan" lama
+   * (1i-nGUWKq…) TIDAK lagi dibaca oleh dashboard ini.
    *
    * Sheet ini sudah difilter pada level sumber:
    * Outlet = "Dikichi" untuk SELURUH baris.
@@ -25,10 +31,10 @@ const DASHBOARD_CONFIG = {
    **************************************************/
 
   SPREADSHEET_ID:
-    "1i-nGUWKqmVgNOdDjN2f8c5gk5lsgS-PaLbABLjqteaA",
+    "1LF6KXqLEodSzbxbW_yS8UVGZC1SjgZv3BBJ9PKio9Qc",
 
   MASTER_SHEET:
-    "Master Responses Gabungan",
+    "Master Dikichi New",
 
   /*
    * Nilai kolom Outlet yang dianggap milik
@@ -112,7 +118,7 @@ const DASHBOARD_CONFIG = {
    * HEADER MAP
    *
    * Nama kolom aktual di sheet
-   * "Master Responses Gabungan".
+   * "Master Dikichi New" (identik dengan MRG).
    **************************************************/
 
   HEADERS: {

@@ -1,7 +1,24 @@
 {
  "scriptId": "1jIhqj-m4-vwKxkL8ulAE2peZXT8deeuHBJFqqra4SJcVilS1YiK2M4y9",
- "version": 9,
- "deploymentId": "AKfycbz1JQH2QgwEicHB5GsJ2ZAU4X-o9iX3moXZOTA9-9XIkKX4ndYEqCzV2tt3Y9gN1y0",
- "execUrl": "https://script.google.com/macros/s/AKfycbz1JQH2QgwEicHB5GsJ2ZAU4X-o9iX3moXZOTA9-9XIkKX4ndYEqCzV2tt3Y9gN1y0/exec",
- "previousDeploymentId": "AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp"
+ "version": 12,
+ "deploymentId": "AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp",
+ "execUrl": "https://script.google.com/macros/s/AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp/exec",
+ "previousDeploymentId": "AKfycbwDrSripeMtToDmXIFPWvqfEhVS7ALee1CWmiyUVbhNXm0_T7TEzxCqLYjWZDE6GSJp",
+ "history": [
+  {
+   "version": 10,
+   "desc": "Dikichi data source -> Master Dikichi New (spreadsheet 1LF6KXqLEodSzbxbW_yS8UVGZC1SjgZv3BBJ9PKio9Qc)",
+   "ts": "2026-10-08T15:28:17"
+  },
+  {
+   "version": 11,
+   "desc": "Label DATA SOURCE -> Master Dikichi New (kosmetik, sumber data sudah 1LF6KXq / Master Dikichi New)",
+   "ts": "2026-10-08T15:40:35"
+  },
+  {
+   "version": 12,
+   "desc": "Label DATA SOURCE -> Master Dikichi New (Index mirror)",
+   "ts": "2026-10-08T15:46:30"
+  }
+ ]
 }
