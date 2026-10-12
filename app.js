@@ -1933,7 +1933,7 @@ function renderRecentAudits(audits) {
         '<td class="table-primary">' + escapeHtml(audit.auditId || '\u2014') + '</td>' +
         '<td>' + formatDateTime(audit.timestamp) + '</td>' +
         '<td>' + escapeHtml(audit.outlet  || '\u2014') + '</td>' +
-        '<td>' + escapeHtml(audit.product || '\u2014') + '</td>' +
+        '<td>' + (Array.isArray(audit.product) ? audit.product.join(', ') : (audit.product || audit.item || '\u2014')) + '</td>' +
         '<td class="score-cell ' + getScoreClass(score) + '">' + formatScore(score) + '</td>' +
         '<td>' + createGradeBadge(audit.grade || dashboardGrade(score)) + '</td>' +
         '<td class="feedback-cell">' + escapeHtml(audit.feedback || audit.catatan || "") + '</td>' +
