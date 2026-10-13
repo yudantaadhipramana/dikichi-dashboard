@@ -1474,6 +1474,20 @@ const DashboardAnalytics = {
             audits:
               [],
 
+            /*
+             * MULTI-PRODUCT: satu audit bisa memuat >1 produk,
+             * sehingga audit-level (`audits`) hanya menghitung
+             * audit yang produk baris pertamanya = produk ini.
+             * Statistik produk dihitung dari level ITEM supaya
+             * produk kedua juga terhitung penuh.
+             */
+
+            itemScores:
+              [],
+
+            itemAuditIds:
+              {},
+
             items:
               {}
 
@@ -1526,6 +1540,12 @@ const DashboardAnalytics = {
             audits:
               [],
 
+            itemScores:
+              [],
+
+            itemAuditIds:
+              {},
+
             items:
               {}
 
@@ -1564,6 +1584,29 @@ const DashboardAnalytics = {
             itemAudit
           );
 
+
+        /*
+         * Statistik level produk (dipakai Product Quality
+         * Ranking): kumpulkan skor tiap item-row + audit_id
+         * unik, supaya produk yang bukan baris pertama audit
+         * tetap terhitung.
+         */
+
+        grouped[product]
+          .itemScores
+          .push(
+            itemAudit.score
+          );
+
+
+        if (itemAudit.auditId) {
+
+          grouped[product]
+            .itemAuditIds[itemAudit.auditId] =
+              true;
+
+        }
+
       }
     );
 
@@ -1576,10 +1619,35 @@ const DashboardAnalytics = {
             grouped[product];
 
 
+          /*
+           * Skor produk dihitung dari level ITEM (bukan skor
+           * audit utuh), supaya audit multi-produk tidak
+           * diatribusikan hanya ke produk baris pertama.
+           */
+
           const score =
-            dashboardAverage(
-              entry.scores
-            );
+            (
+              entry.itemScores &&
+              entry.itemScores.length
+            )
+              ? dashboardAverage(
+                  entry.itemScores
+                )
+              : dashboardAverage(
+                  entry.scores
+                );
+
+
+          /*
+           * Jumlah audit = audit_id unik pada item-row produk
+           * ini; fallback ke audit-level bila item-row kosong.
+           */
+
+          const auditCount =
+            Object.keys(
+              entry.itemAuditIds || {}
+            ).length ||
+            entry.audits.length;
 
 
           /* ---------- ITEM DETAIL ---------- */
@@ -1769,7 +1837,7 @@ const DashboardAnalytics = {
               ),
 
             audits:
-              entry.audits.length,
+              auditCount,
 
             items:
               items
