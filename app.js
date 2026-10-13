@@ -1885,6 +1885,78 @@ function renderOutlets(
    RECENT AUDITS
    ========================================================= */
 
+/*
+ * MULTI-PRODUCT AUDIT: satu audit bisa menguji lebih dari satu produk
+ * (mis. Nasi + Ayam Ori). Sumber urutan kepercayaan:
+ *   1. audit.products  — daftar lengkap dari API (versi terbaru)
+ *   2. audit.product   — produk baris pertama (API lama) + item dari
+ *      attributes[] yang dipetakan ke produknya via data.items
+ *   3. audit.item
+ */
+function dashboardItemProductMap() {
+  var data = DashboardState.data;
+  if (!data) return {};
+  if (DashboardState._itemProductMapSource === data.items && DashboardState._itemProductMap) {
+    return DashboardState._itemProductMap;
+  }
+  var map = {};
+  (data.items || []).forEach(function(it) {
+    if (it && it.item && it.product) map[String(it.item).trim()] = String(it.product);
+  });
+  DashboardState._itemProductMapSource = data.items;
+  DashboardState._itemProductMap = map;
+  return map;
+}
+
+function auditItemNames(audit) {
+  var names = [];
+  function push(v) {
+    if (!v) return;
+    v = String(v).trim();
+    if (v && names.indexOf(v) === -1) names.push(v);
+  }
+  if (audit && Array.isArray(audit.items) && audit.items.length) {
+    audit.items.forEach(push);
+  } else if (audit && Array.isArray(audit.attributes)) {
+    audit.attributes.forEach(function(x) { if (x) push(x.item); });
+  }
+  if (!names.length && audit) push(audit.item);
+  return names;
+}
+
+function auditProductLabel(audit) {
+  if (!audit) return '\u2014';
+
+  if (Array.isArray(audit.products) && audit.products.length) {
+    return audit.products.join(', ');
+  }
+
+  var names = [];
+  function push(v) {
+    if (!v) return;
+    v = String(v).trim();
+    if (v && names.indexOf(v) === -1) names.push(v);
+  }
+
+  if (!Array.isArray(audit.product)) push(audit.product);
+
+  var map = dashboardItemProductMap();
+
+  if (Array.isArray(audit.attributes)) {
+    audit.attributes.forEach(function(x) {
+      if (!x) return;
+      if (x.product) { push(x.product); return; }
+      var mapped = x.item ? map[String(x.item).trim()] : null;
+      /* produk ambigu (item dipakai beberapa produk) -> jangan diklaim */
+      if (mapped && mapped.indexOf(',') === -1) push(mapped);
+    });
+  }
+
+  if (!names.length) push(audit.item);
+
+  return names.length ? names.join(', ') : '\u2014';
+}
+
 function renderRecentAudits(audits) {
 
   var container = document.getElementById("recentAuditTable");
@@ -1933,7 +2005,7 @@ function renderRecentAudits(audits) {
         '<td class="table-primary">' + escapeHtml(audit.auditId || '\u2014') + '</td>' +
         '<td>' + formatDateTime(audit.timestamp) + '</td>' +
         '<td>' + escapeHtml(audit.outlet  || '\u2014') + '</td>' +
-        '<td>' + (Array.isArray(audit.product) ? audit.product.join(', ') : (audit.product || audit.item || '\u2014')) + '</td>' +
+        '<td>' + escapeHtml(auditProductLabel(audit)) + '</td>' +
         '<td class="score-cell ' + getScoreClass(score) + '">' + formatScore(score) + '</td>' +
         '<td>' + createGradeBadge(audit.grade || dashboardGrade(score)) + '</td>' +
         '<td class="feedback-cell">' + escapeHtml(audit.feedback || audit.catatan || "") + '</td>' +
@@ -1946,7 +2018,7 @@ function renderRecentAudits(audits) {
     if (!searchTerm) return currentData;
     var q = searchTerm.toLowerCase();
     return currentData.filter(function(a) {
-      return [a.auditId, a.outlet, a.product, a.feedback, a.catatan, a.grade]
+      return [a.auditId, a.outlet, auditProductLabel(a), auditItemNames(a).join(', '), a.feedback, a.catatan, a.grade]
         .some(function(v) { return v && String(v).toLowerCase().indexOf(q) !== -1; });
     });
   }
@@ -2051,8 +2123,8 @@ function renderRecentAudits(audits) {
       this.classList.add(sortAsc ? "sort-asc" : "sort-desc");
       var key = colKeys[col];
       currentData = safeAudits.slice().sort(function(a, b) {
-        var av = String(a[key] || "");
-        var bv = String(b[key] || "");
+        var av = key === "product" ? auditProductLabel(a) : String(a[key] || "");
+        var bv = key === "product" ? auditProductLabel(b) : String(b[key] || "");
         return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
       });
       currentPage = 1;
@@ -4160,12 +4232,24 @@ function openAttentionDetail(index) {
     }
     return audit.item || '';
   }
+  /** PRODUCT pemilik baris attribute ini (audit bisa punya >1 produk). */
+  function getAttrProduct(audit) {
+    if (Array.isArray(audit.attributes)) {
+      var found = audit.attributes.find(function(x){ return x.attribute === attr; });
+      if (found && found.product) return String(found.product);
+      if (found && found.item) {
+        var mapped = dashboardItemProductMap()[String(found.item).trim()];
+        if (mapped && mapped.indexOf(',') === -1) return String(mapped);
+      }
+    }
+    return audit.product || audit.item || '';
+  }
   /** ITEM column source for the AUDIT EVIDENCE table (item the attr score/feedback belongs to). */
 
   // -- AFFECTED PRODUCTS --------------------------------------------
   var productMap = {};
   relevantAudits.forEach(function(a) {
-    var p    = a.product || 'Unknown';
+    var p    = getAttrProduct(a) || 'Unknown';
     var asc  = getAttrScore(a);
     if (asc === null) return;
     if (!productMap[p]) productMap[p] = { scores:[], count:0 };
@@ -4245,7 +4329,7 @@ function openAttentionDetail(index) {
         return '<tr>' +
           '<td style="white-space:nowrap;font-size:12px">'+fmtDate(a.timestamp)+'</td>' +
           '<td>'+escapeHtml(a.outlet||'-')+'</td>' +
-          '<td>'+escapeHtml(a.product||'-')+'</td>' +
+          '<td>'+escapeHtml(getAttrProduct(a)||'-')+'</td>' +
           '<td style="font-size:12px">'+escapeHtml(getAttrItem(a)||'-')+'</td>' +
           '<td style="text-align:right;font-weight:700;color:'+(asc!==null&&asc<4?'var(--grade-borderline)':'inherit')+'">'+scoreStr+'</td>' +
           '<td style="font-size:12px;color:var(--text-muted)">'+escapeHtml(afb||'-')+'</td>' +

@@ -898,6 +898,15 @@ const DashboardAnalytics = {
                   item:
                     row.item,
 
+                  /*
+                   * Produk pemilik baris ini — audit
+                   * multi-produk tidak boleh diatribusikan
+                   * ke produk baris pertama saja.
+                   */
+
+                  product:
+                    row.product,
+
                   attribute:
                     row.attribute,
 
@@ -960,6 +969,53 @@ const DashboardAnalytics = {
           );
 
 
+          /*
+           * MULTI-PRODUCT AUDIT: satu audit dapat menguji lebih
+           * dari satu produk/item (mis. Nasi + Ayam Ori). Field
+           * `product`/`item` historis = baris pertama saja dan
+           * masih dipakai agregasi lama, jadi daftar lengkap
+           * dikirim terpisah — Audit Explorer & pencarian pakai
+           * `products` supaya produk kedua tidak hilang.
+           */
+
+          const products =
+            [];
+
+          const items =
+            [];
+
+
+          rows.forEach(
+            function(row) {
+
+              const productName =
+                String(row.product || "").trim();
+
+              if (
+                productName &&
+                products.indexOf(productName) === -1
+              ) {
+
+                products.push(productName);
+
+              }
+
+              const itemName =
+                String(row.item || "").trim();
+
+              if (
+                itemName &&
+                items.indexOf(itemName) === -1
+              ) {
+
+                items.push(itemName);
+
+              }
+
+            }
+          );
+
+
           return {
 
             auditId:
@@ -997,6 +1053,17 @@ const DashboardAnalytics = {
 
             item:
               first.item,
+
+            /*
+             * Daftar lengkap produk/item dalam audit ini
+             * (baris pertama bisa bukan satu-satunya).
+             */
+
+            products:
+              products,
+
+            items:
+              items,
 
             score:
               dashboardRound(
