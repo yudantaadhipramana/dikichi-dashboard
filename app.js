@@ -4213,53 +4213,60 @@ function openAttentionDetail(index) {
     });
   });
 
-  // Helper: get attribute score for this attr from audit
-  function getAttrScore(audit) {
-    if (!Array.isArray(audit.attributes)) return null;
-    var found = audit.attributes.find(function(x){ return x.attribute === attr; });
-    return found ? Number(found.score) : null;
-  }
-  function getAttrFeedback(audit) {
-    if (!Array.isArray(audit.attributes)) return '';
-    var found = audit.attributes.find(function(x){ return x.attribute === attr; });
-    return found ? (found.feedback || '') : '';
-  }
-
-  function getAttrItem(audit) {
-    if (Array.isArray(audit.attributes)) {
-      var found = audit.attributes.find(function(x){ return x.attribute === attr; });
-      if (found && found.item) return String(found.item);
-    }
-    return audit.item || '';
-  }
-  /** PRODUCT pemilik baris attribute ini (audit bisa punya >1 produk). */
-  function getAttrProduct(audit) {
-    if (Array.isArray(audit.attributes)) {
-      var found = audit.attributes.find(function(x){ return x.attribute === attr; });
-      if (found && found.product) return String(found.product);
-      if (found && found.item) {
-        var mapped = dashboardItemProductMap()[String(found.item).trim()];
-        if (mapped && mapped.indexOf(',') === -1) return String(mapped);
-      }
-    }
+  /*
+   * MULTI-PRODUCT: satu audit bisa punya >1 baris untuk attribute yang
+   * sama (mis. Visual untuk Nasi dan Visual untuk Ayam Ori Kecil).
+   * `.find()` membuang baris kedua -> popup under-report. Ambil SEMUA
+   * baris, simpan produk/item/feedback pemilik baris itu.
+   */
+  function rowProduct(audit, item) {
+    var m = dashboardItemProductMap()[String(item || '').trim()];
+    if (m && m.indexOf(',') === -1) return m;
     return audit.product || audit.item || '';
   }
-  /** ITEM column source for the AUDIT EVIDENCE table (item the attr score/feedback belongs to). */
+
+  var attrRows = [];
+  relevantAudits.forEach(function(a) {
+    var rows = Array.isArray(a.attributes)
+      ? a.attributes.filter(function(x) { return x && x.attribute === attr; })
+      : [];
+    if (!rows.length) rows = [{ item: a.item, score: null }];
+    rows.forEach(function(r) {
+      var itemName = r.item || a.item || '';
+      var notes = (a.itemNotes && a.itemNotes[itemName]) || '';
+      attrRows.push({
+        audit:    a,
+        item:     itemName,
+        product:  r.product || rowProduct(a, itemName),
+        score:    (r.score === null || r.score === undefined) ? null : Number(r.score),
+        feedback: String(r.feedback || '').trim() || String(notes).trim()
+      });
+    });
+  });
+  function distinctAudits(rows) {
+    var seen = {}, n = 0;
+    rows.forEach(function(r) {
+      var id = r.audit.auditId;
+      if (id === undefined || id === null) id = r.audit.timestamp;
+      if (seen[id]) return;
+      seen[id] = 1; n++;
+    });
+    return n;
+  }
 
   // -- AFFECTED PRODUCTS --------------------------------------------
   var productMap = {};
-  relevantAudits.forEach(function(a) {
-    var p    = getAttrProduct(a) || 'Unknown';
-    var asc  = getAttrScore(a);
-    if (asc === null) return;
-    if (!productMap[p]) productMap[p] = { scores:[], count:0 };
-    productMap[p].scores.push(asc);
+  attrRows.forEach(function(r) {
+    var p = r.product || 'Unknown';
+    if (!productMap[p]) productMap[p] = { rows: [], count: 0 };
+    if (r.score !== null) productMap[p].rows.push(r.score);
     productMap[p].count++;
   });
   var productRows = Object.keys(productMap).map(function(p) {
-    var avg = productMap[p].scores.reduce(function(s,v){return s+v;},0) / productMap[p].scores.length;
+    var rows = productMap[p].rows;
+    var avg = rows.length ? rows.reduce(function(s,v){return s+v;},0) / rows.length : 0;
     avg = Math.round(avg*100)/100;
-    return { product: p, score: avg, audits: productMap[p].count, grade: dashboardGrade(avg) };
+    return { product: p, score: avg, audits: distinctAudits(attrRows.filter(function(r){ return (r.product || 'Unknown') === p; })), grade: dashboardGrade(avg) };
   }).sort(function(a,b){ return a.score - b.score; });
 
   var productTableHtml = productRows.length
@@ -4274,18 +4281,17 @@ function openAttentionDetail(index) {
 
   // -- AFFECTED OUTLETS ---------------------------------------------
   var outletMap = {};
-  relevantAudits.forEach(function(a) {
-    var o   = a.outlet || 'Unknown';
-    var asc = getAttrScore(a);
-    if (asc === null) return;
-    if (!outletMap[o]) outletMap[o] = { scores:[], count:0 };
-    outletMap[o].scores.push(asc);
-    outletMap[o].count++;
+  attrRows.forEach(function(r) {
+    var o = r.audit.outlet || 'Unknown';
+    if (!outletMap[o]) outletMap[o] = { rows: [], list: [] };
+    if (r.score !== null) outletMap[o].rows.push(r.score);
+    outletMap[o].list.push(r);
   });
   var outletRows = Object.keys(outletMap).map(function(o) {
-    var avg = outletMap[o].scores.reduce(function(s,v){return s+v;},0) / outletMap[o].scores.length;
+    var rows = outletMap[o].rows;
+    var avg = rows.length ? rows.reduce(function(s,v){return s+v;},0) / rows.length : 0;
     avg = Math.round(avg*100)/100;
-    return { outlet: o, score: avg, audits: outletMap[o].count, grade: dashboardGrade(avg) };
+    return { outlet: o, score: avg, audits: distinctAudits(outletMap[o].list), grade: dashboardGrade(avg) };
   }).sort(function(a,b){ return a.score - b.score; });
 
   var showAll = outletRows.length <= 5;
@@ -4304,10 +4310,10 @@ function openAttentionDetail(index) {
     : '<p style="color:var(--text-muted);font-style:italic">No outlet-level issue found for this attribute in selected dataset.</p>';
 
   // -- AUDIT EVIDENCE -----------------------------------------------
-  // Sort by attr score asc (worst first), take top 20
-  var evidenceAudits = relevantAudits.slice().sort(function(a,b){
-    var as = getAttrScore(a), bs = getAttrScore(b);
-    return (as||99) - (bs||99);
+  // Satu baris per attribute-row (audit multi-produk bisa punya >1),
+  // sort by attr score asc (worst first), take top 20
+  var evidenceRows = attrRows.slice().sort(function(a,b){
+    return (a.score===null?99:a.score) - (b.score===null?99:b.score);
   }).slice(0,20);
 
   function fmtDate(ts) {
@@ -4319,18 +4325,17 @@ function openAttentionDetail(index) {
            ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   }
 
-  var evidenceHtml = evidenceAudits.length
+  var evidenceHtml = evidenceRows.length
     ? '<table class="data-table" style="width:100%"><thead><tr><th>DATE</th><th>OUTLET</th><th>PRODUCT</th><th>ITEM</th><th style="text-align:right">SCORE</th><th>FEEDBACK</th></tr></thead><tbody>' +
-      evidenceAudits.map(function(a){
-        var asc  = getAttrScore(a);
-        var afb  = (getAttrFeedback(a) || '').trim() ||
-                   ((a.itemNotes && a.itemNotes[getAttrItem(a)]) || '').trim();
+      evidenceRows.map(function(r){
+        var asc = r.score;
+        var afb = r.feedback;
         var scoreStr = asc !== null ? asc.toFixed(2) : '-';
         return '<tr>' +
-          '<td style="white-space:nowrap;font-size:12px">'+fmtDate(a.timestamp)+'</td>' +
-          '<td>'+escapeHtml(a.outlet||'-')+'</td>' +
-          '<td>'+escapeHtml(getAttrProduct(a)||'-')+'</td>' +
-          '<td style="font-size:12px">'+escapeHtml(getAttrItem(a)||'-')+'</td>' +
+          '<td style="white-space:nowrap;font-size:12px">'+fmtDate(r.audit.timestamp)+'</td>' +
+          '<td>'+escapeHtml(r.audit.outlet||'-')+'</td>' +
+          '<td>'+escapeHtml(r.product||'-')+'</td>' +
+          '<td style="font-size:12px">'+escapeHtml(r.item||'-')+'</td>' +
           '<td style="text-align:right;font-weight:700;color:'+(asc!==null&&asc<4?'var(--grade-borderline)':'inherit')+'">'+scoreStr+'</td>' +
           '<td style="font-size:12px;color:var(--text-muted)">'+escapeHtml(afb||'-')+'</td>' +
           '</tr>';
