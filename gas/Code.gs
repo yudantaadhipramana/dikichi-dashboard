@@ -51,8 +51,18 @@ function doGet(e) {
    * (>1 menit). Harus di ATAS return.
    */
 
+  /*
+   * ScriptApp.getProjectTriggers() lambat jika dipanggil
+   * di setiap request API. Cukup dicek sekali per
+   * WARMUP_CHECK_INTERVAL_SECONDS (trigger jarang hilang).
+   */
+
   try {
-    ensureWarmupTrigger();
+    if (dashboardTryAcquireThrottle(
+          "WARMUP_CHECK",
+          DASHBOARD_CONFIG.WARMUP_CHECK_INTERVAL_SECONDS)) {
+      ensureWarmupTrigger();
+    }
   } catch (ignore) {
     /* web app tetap jalan walau trigger gagal */
   }
@@ -125,6 +135,24 @@ function doGet(e) {
 
       if (page === "refresh") {
 
+        /* Endpoint ini anonim. Tanpa batas, siapa pun
+           bisa terus-menerus mengosongkan cache sehingga
+           setiap pengunjung kena cold read. Maksimal satu
+           clear per REFRESH_MIN_INTERVAL_SECONDS. */
+
+        if (!dashboardTryAcquireThrottle(
+              "REFRESH",
+              DASHBOARD_CONFIG.REFRESH_MIN_INTERVAL_SECONDS)) {
+
+          return jsonOutput({
+            ok: true,
+            cleared: false,
+            throttled: true,
+            ts: (new Date()).toISOString()
+          });
+
+        }
+
         clearDashboardCache();
 
         return jsonOutput({
@@ -136,6 +164,21 @@ function doGet(e) {
       }
 
       if (page === "perf") {
+
+        /* perf membaca sheet + build penuh; batasi
+           supaya tidak bisa dipakai membebani kuota. */
+
+        if (!dashboardTryAcquireThrottle(
+              "PERF",
+              DASHBOARD_CONFIG.PERF_MIN_INTERVAL_SECONDS)) {
+
+          return jsonOutput({
+            ok: false,
+            throttled: true,
+            error: "perf dibatasi, coba lagi nanti"
+          });
+
+        }
 
         /* DIAGNOSTIK: ukur tiap tahap supaya ketahuan
            bagian mana yang lambat (bukan menebak). */
@@ -229,6 +272,41 @@ function doGet(e) {
 /* ==================================================
  * 1b. JSON API HELPERS (fase B)
  * ================================================== */
+
+/**
+ * Throttle sederhana berbasis CacheService.
+ * true = boleh jalan sekarang (dan slot langsung
+ * dikunci selama `seconds`); false = masih dalam
+ * jeda. Kegagalan cache dianggap boleh jalan supaya
+ * fungsi utama tidak pernah terblokir.
+ */
+function dashboardTryAcquireThrottle(name, seconds) {
+
+  try {
+
+    const cache =
+      CacheService.getScriptCache();
+
+    const key =
+      DASHBOARD_CONFIG.CACHE_KEY + "_THROTTLE_" + name;
+
+    if (cache.get(key)) {
+      return false;
+    }
+
+    cache.put(key, "1", Math.max(1, seconds || 1));
+
+    return true;
+
+  }
+  catch (ignore) {
+
+    return true;
+
+  }
+
+}
+
 
 /**
  * Bungkus objek jadi JSON response.
