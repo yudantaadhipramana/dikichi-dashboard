@@ -104,6 +104,27 @@ function doGet(e) {
 
       }
 
+      if (page === "rows") {
+
+        /* Fase 2: frontend menghitung semua agregasi
+           sendiri dari baris ternormalisasi ini, jadi
+           perubahan filter tidak perlu request lagi.
+           Isinya sama dengan yang sudah terbuka lewat
+           ?page=audits (skor, finding, evidence). */
+
+        const rows =
+          DashboardData.getData();
+
+        return jsonOutput({
+          ok: true,
+          schema: 1,
+          ts: (new Date()).toISOString(),
+          count: rows.length,
+          rows: rows
+        });
+
+      }
+
       if (page === "download") {
 
         return jsonOutput({
