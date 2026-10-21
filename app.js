@@ -258,6 +258,102 @@ function apiFetch(params) {
   return attempt(1);
 }
 
+/*
+ * FASE 2 — HITUNG DI BROWSER
+ *
+ * Data Dikichi kecil (ratusan baris), jadi baris ternormalisasi
+ * diambil sekali lewat ?page=rows lalu semua agregasi dihitung
+ * di browser oleh analytics.js (salinan logika gas/*.gs, lihat
+ * tools/build-analytics.js). Ganti filter = instan, tanpa request.
+ *
+ * Fallback: kalau backend belum punya ?page=rows (deployment
+ * lama) atau analytics.js gagal dimuat, semua kembali ke jalur
+ * lama ?page=fast / ?page=audits tanpa perubahan perilaku.
+ */
+
+var ROWS_MAX_AGE_MS = 4 * 60 * 1000;
+
+var LocalData = {
+  rows: null,
+  ts: null,
+  fetchedAt: 0,
+  unsupported: false,
+  pending: null
+};
+
+function canComputeLocally() {
+  return !LocalData.unsupported &&
+    typeof window.DikichiAnalytics !== "undefined";
+}
+
+function ensureRows() {
+
+  if (!canComputeLocally()) {
+    return Promise.resolve(null);
+  }
+
+  if (
+    LocalData.rows &&
+    Date.now() - LocalData.fetchedAt < ROWS_MAX_AGE_MS
+  ) {
+    return Promise.resolve(LocalData.rows);
+  }
+
+  if (LocalData.pending) {
+    return LocalData.pending;
+  }
+
+  LocalData.pending = apiFetch({ page: "rows" })
+    .then(function(r) {
+
+      if (!r || r.ok !== true || !Array.isArray(r.rows)) {
+        /* Backend lama: "Unknown page: rows". */
+        LocalData.unsupported = true;
+        return null;
+      }
+
+      LocalData.rows = r.rows;
+      LocalData.ts = r.ts || (new Date()).toISOString();
+      LocalData.fetchedAt = Date.now();
+      return LocalData.rows;
+
+    })
+    .catch(function(err) {
+
+      console.warn("rows fetch failed, pakai data terakhir/server:", err);
+      return LocalData.rows;
+
+    })
+    .then(function(rows) {
+
+      LocalData.pending = null;
+      return rows;
+
+    });
+
+  return LocalData.pending;
+
+}
+
+function computeOrFetch(compute, page, filtersParam) {
+
+  return ensureRows().then(function(rows) {
+
+    if (rows) {
+      try {
+        return compute(rows);
+      }
+      catch (err) {
+        console.warn("local compute failed, fallback ke server:", err);
+      }
+    }
+
+    return apiFetch({ page: page, filters: filtersParam });
+
+  });
+
+}
+
 /**
  * Shim google.script.run supaya kode render tidak perlu
  * diubah satu per satu: denganSuccessHandler(...)
@@ -274,19 +370,19 @@ function serverCall(fnName, arg) {
 
   if (fnName === "getDashboardDataFast") {
 
-    return apiFetch({
-      page: "fast",
-      filters: filtersParam
-    });
+    return computeOrFetch(function(rows) {
+      return DikichiAnalytics.build(
+        rows, filters, { excludeAudits: true }, LocalData.ts
+      );
+    }, "fast", filtersParam);
 
   }
 
   if (fnName === "getDashboardAudits") {
 
-    return apiFetch({
-      page: "audits",
-      filters: filtersParam
-    });
+    return computeOrFetch(function(rows) {
+      return DikichiAnalytics.audits(rows, filters);
+    }, "audits", filtersParam);
 
   }
 
@@ -303,9 +399,14 @@ function serverCall(fnName, arg) {
   ) {
 
     /* Refresh: buang cache di server supaya data
-       diambil ulang dari sheet saat request berikutnya. */
+       diambil ulang dari sheet saat request berikutnya,
+       dan paksa ambil ulang baris di browser. */
 
-    return apiFetch({ page: "refresh" });
+    return apiFetch({ page: "refresh" })
+      .then(function(r) {
+        LocalData.fetchedAt = 0;
+        return r;
+      });
 
   }
 
@@ -323,53 +424,62 @@ if (!google.script) {
   google.script = {};
 }
 
+/*
+ * Setiap rantai withSuccessHandler/withFailureHandler punya
+ * handler sendiri. Versi lama menyimpan handler di satu objek
+ * bersama, sehingga dua panggilan yang tumpang tindih (mis.
+ * auto-refresh saat audit masih dimuat) bisa saling menimpa.
+ */
 google.script.run = (function() {
 
-  var _ok = null;
-  var _fail = null;
-
-  var api = {
-
-    withSuccessHandler: function(fn) {
-      _ok = fn;
-      return api;
-    },
-
-    withFailureHandler: function(fn) {
-      _fail = fn;
-      return api;
-    }
-
-  };
-
-  [
+  var FUNCTIONS = [
     "getDashboardDataFast",
     "getDashboardAudits",
     "getMasterDikichiDownloadUrl",
     "runETLAndRefresh",
     "refreshDashboardData"
-  ].forEach(function(fnName) {
+  ];
 
-    api[fnName] = function(arg) {
+  function runner(ok, fail) {
 
-      serverCall(fnName, arg)
-        .then(function(result) {
+    var api = {
 
-          if (_ok) _ok(result);
+      withSuccessHandler: function(fn) {
+        return runner(fn, fail);
+      },
 
-        })
-        .catch(function(err) {
-
-          if (_fail) _fail(err);
-          else console.error(fnName + " ERROR:", err);
-
-        });
+      withFailureHandler: function(fn) {
+        return runner(ok, fn);
+      }
 
     };
 
-  });
+    FUNCTIONS.forEach(function(fnName) {
 
-  return api;
+      api[fnName] = function(arg) {
+
+        serverCall(fnName, arg)
+          .then(function(result) {
+
+            if (ok) ok(result);
+
+          })
+          .catch(function(err) {
+
+            if (fail) fail(err);
+            else console.error(fnName + " ERROR:", err);
+
+          });
+
+      };
+
+    });
+
+    return api;
+
+  }
+
+  return runner(null, null);
 
 })();
 
