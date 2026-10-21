@@ -53,6 +53,23 @@ const DASHBOARD_CONFIG = {
     300000,
 
   /**************************************************
+   * PROTEKSI ENDPOINT ANONIM
+   *
+   * ?page=refresh maksimal 1x per 2 menit, ?page=perf
+   * maksimal 1x per 5 menit. Cek trigger warmup cukup
+   * 1x per 6 jam (bukan di setiap request).
+   **************************************************/
+
+  REFRESH_MIN_INTERVAL_SECONDS:
+    120,
+
+  PERF_MIN_INTERVAL_SECONDS:
+    300,
+
+  WARMUP_CHECK_INTERVAL_SECONDS:
+    21600,
+
+  /**************************************************
    * MINIMUM SAMPLE UNTUK GAUGE PERIODE
    *
    * Bulan terbaru hanya dipakai sebagai "This Month"
@@ -60,10 +77,13 @@ const DASHBOARD_CONFIG = {
    * Tanpa guard, bulan yang baru berjalan (misal
    * baru 2 audit) menghasilkan skor ekstrem seperti
    * 5.00 yang menyesatkan.
+   *
+   * 20 adalah angka Gacoan (ribuan audit). Volume
+   * Dikichi jauh lebih kecil, jadi 10.
    **************************************************/
 
   MONTH_COMPARISON_MIN_AUDITS:
-    20,
+    10,
 
   /**************************************************
    * SCORE THRESHOLDS

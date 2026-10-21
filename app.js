@@ -1634,8 +1634,8 @@ function renderItems(items) {
 
     return '<tr class="clickable-row" onclick="openItemDetail(' + index + ')">' +
       '<td class="rank-cell">' + (index + 1) + '</td>' +
-      '<td><span class="table-primary prod-name">' + escapeHtml(item.item || '\\u2014') + '</span></td>' +
-      '<td>' + escapeHtml(item.product || '\\u2014') + '</td>' +
+      '<td><span class="table-primary prod-name">' + escapeHtml(item.item || '\u2014') + '</span></td>' +
+      '<td>' + escapeHtml(item.product || '\u2014') + '</td>' +
       '<td class="prod-score-cell">' + scoreHtml + '</td>' +
       '<td>' + createGradeBadge(item.grade || dashboardGrade(score)) + '</td>' +
       '<td class="prod-audits-cell">' + formatNumber(item.audits) + '</td>' +
@@ -1676,7 +1676,7 @@ function openItemDetail(index) {
   var parameterRows = parameters.map(function(parameter) {
     var pScore = Number(parameter.score || 0);
     return '<tr>' +
-      '<td>' + escapeHtml(parameter.attribute || '\\u2014') + '</td>' +
+      '<td>' + escapeHtml(parameter.attribute || '\u2014') + '</td>' +
       '<td><strong>' + formatScore(pScore) + '</strong></td>' +
       '<td>' + createGradeBadge(parameter.grade || dashboardGrade(pScore)) + '</td>' +
       '<td>' + formatNumber(parameter.observations) + '</td>' +
@@ -1689,7 +1689,7 @@ function openItemDetail(index) {
         formatScore(Number(item.score || 0)) +
       '</div>' +
       '<div class="detail-meta">' +
-        '<div class="detail-title">' + escapeHtml(item.item || '\\u2014') + '</div>' +
+        '<div class="detail-title">' + escapeHtml(item.item || '\u2014') + '</div>' +
         '<div class="detail-subtitle">' + escapeHtml(item.product || '') + '</div>' +
       '</div>' +
       '<div>' + createGradeBadge(item.grade || dashboardGrade(Number(item.score || 0))) + '</div>' +
@@ -4798,8 +4798,8 @@ function openItemTable() {
     var score = Number(item.score || 0);
     return '<tr>' +
       '<td class="rank-cell">' + (index + 1) + '</td>' +
-      '<td>' + escapeHtml(item.item || '\\u2014') + '</td>' +
-      '<td>' + escapeHtml(item.product || '\\u2014') + '</td>' +
+      '<td>' + escapeHtml(item.item || '\u2014') + '</td>' +
+      '<td>' + escapeHtml(item.product || '\u2014') + '</td>' +
       '<td><strong>' + formatScore(score) + '</strong></td>' +
       '<td>' + createGradeBadge(item.grade || dashboardGrade(score)) + '</td>' +
       '<td>' + formatNumber(item.audits) + '</td>' +
