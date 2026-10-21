@@ -102,5 +102,18 @@ var out = [
   ""
 ].join("\n");
 
-fs.writeFileSync(path.join(root, "analytics.js"), out);
+var target = path.join(root, "analytics.js");
+
+if (process.argv[2] === "--check") {
+  /* Gagal kalau analytics.js tidak sesuai dengan gas/ saat ini. */
+  var current = fs.existsSync(target) ? fs.readFileSync(target, "utf8") : "";
+  if (current !== out) {
+    console.error("analytics.js BASI: jalankan `node tools/build-analytics.js` lalu commit.");
+    process.exit(1);
+  }
+  console.log("analytics.js sesuai dengan gas/");
+  process.exit(0);
+}
+
+fs.writeFileSync(target, out);
 console.log("analytics.js ditulis (" + out.length + " byte)");
