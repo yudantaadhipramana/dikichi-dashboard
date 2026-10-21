@@ -1007,29 +1007,6 @@ function matrixCell(value) {
 
 }
 
-function matrixPercentCell(value) {
-
-  if (value === null || value === undefined || !isFinite(Number(value))) {
-
-    return '<td class="mx-cell mx-empty">&#8212;</td>';
-
-  }
-
-  var grade = dashboardGrade(value);
-
-  var cls = {
-    "HIGH PASS":        "mx-ex",
-    "MIDDLE PASS":      "mx-good",
-    "BORDERLINE PASS":  "mx-bd",
-    "MIDDLE FAIL":      "mx-ni",
-    "STRONG FAIL":      "mx-fl"
-  }[grade] || "";
-
-  return '<td class="mx-cell ' + cls + '" title="' + grade + '">' +
-    (Number(value) / 5 * 100).toFixed(1) + "%</td>";
-
-}
-
 function matrixHead(months, firstCols) {
 
   var years = matrixYearsOf(months);
@@ -1196,7 +1173,8 @@ function renderBranchMatrix(matrix) {
     html.push('<td class="mx-item mx-first">' + escapeHtml(row.branch) + "</td>");
 
     months.forEach(function(m) {
-      html.push(matrixPercentCell(row.scores ? row.scores[m] : null));
+      /* Skala 1–5, sama dengan heatmap produk dan Quality Standard. */
+      html.push(matrixCell(row.scores ? row.scores[m] : null));
     });
 
     html.push("</tr>");
@@ -1610,7 +1588,10 @@ function renderAttention(
                 if (index === 0) { label = "\u25cf HIGH"; cls = "attention-pri--high"; }
                 else if (index < Math.ceil(total / 2)) { label = "\u25cf MODERATE"; cls = "attention-pri--moderate"; }
                 else { label = "\u25cf LOW"; cls = "attention-pri--low"; }
-                return '<span class="attention-priority-badge ' + cls + '" title="Score: ' + s.toFixed(3) + '">' + label + '</span>';
+                var adj = (item.adjustedScore !== undefined && item.adjustedScore !== null)
+                  ? " \u00b7 skor disesuaikan n=" + formatNumber(item.observations) + ": " + formatScore(item.adjustedScore)
+                  : "";
+                return '<span class="attention-priority-badge ' + cls + '" title="Attention: ' + s.toFixed(3) + adj + '">' + label + '</span>';
               })()}</td>
             </tr>
           `;
