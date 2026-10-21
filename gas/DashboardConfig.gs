@@ -251,6 +251,17 @@ const DASHBOARD_CONFIG = {
   },
 
   /*
+   * Bobot "observasi bayangan" untuk Quality Priorities.
+   * Skor parameter/item dengan n observasi disesuaikan:
+   *   (n * skor + K * rata-rata keseluruhan) / (n + K)
+   * K = 10: dengan 10 observasi, skor sendiri dan rata-rata
+   * keseluruhan berbobot sama; dengan 60 observasi, skor
+   * sendiri ~86%.
+   */
+  PRIORITY_PRIOR_OBSERVATIONS:
+    10,
+
+  /*
    * Bobot risiko per grade.
    * Dipakai untuk menghitung priority score
    * pada Quality Attention.

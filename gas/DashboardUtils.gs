@@ -526,3 +526,67 @@ function dashboardNormalizeBranch(value) {
     .toUpperCase();
 
 }
+
+
+/**
+ * Rata-rata Bayesian: tarik `value` (dari n observasi)
+ * ke arah `prior` dengan bobot PRIORITY_PRIOR_OBSERVATIONS.
+ * n besar -> hampir sama dengan value; n kecil -> dekat prior.
+ */
+function dashboardShrink(value, n, prior) {
+
+  var k =
+    Number(DASHBOARD_CONFIG.PRIORITY_PRIOR_OBSERVATIONS) || 0;
+
+  var v =
+    Number(value);
+
+  n = Number(n) || 0;
+
+  if (!isFinite(v)) {
+    return prior;
+  }
+
+  if (!isFinite(prior) || k <= 0 || n + k <= 0) {
+    return v;
+  }
+
+  return (n * v + k * prior) / (n + k);
+
+}
+
+
+/**
+ * Prior untuk dashboardShrink: rata-rata skor seluruh
+ * observasi parameter dan proporsi observasi < BORDERLINE.
+ */
+function dashboardPriorFromRows(rows) {
+
+  var sum = 0;
+  var low = 0;
+  var count = 0;
+  var limit = dashboardThresholds().BORDERLINE_PASS;
+
+  (rows || []).forEach(function(row) {
+
+    var score = Number(row.score);
+
+    if (!isFinite(score)) {
+      return;
+    }
+
+    sum += score;
+    count += 1;
+
+    if (score < limit) {
+      low += 1;
+    }
+
+  });
+
+  return {
+    score: count ? sum / count : NaN,
+    lowRate: count ? low / count : NaN
+  };
+
+}

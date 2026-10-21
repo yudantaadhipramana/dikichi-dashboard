@@ -306,6 +306,17 @@ const DASHBOARD_CONFIG = {
   },
 
   /*
+   * Bobot "observasi bayangan" untuk Quality Priorities.
+   * Skor parameter/item dengan n observasi disesuaikan:
+   *   (n * skor + K * rata-rata keseluruhan) / (n + K)
+   * K = 10: dengan 10 observasi, skor sendiri dan rata-rata
+   * keseluruhan berbobot sama; dengan 60 observasi, skor
+   * sendiri ~86%.
+   */
+  PRIORITY_PRIOR_OBSERVATIONS:
+    10,
+
+  /*
    * Bobot risiko per grade.
    * Dipakai untuk menghitung priority score
    * pada Quality Attention.
@@ -859,6 +870,70 @@ function dashboardNormalizeBranch(value) {
     .replace(/\s+/g, " ")
     .trim()
     .toUpperCase();
+
+}
+
+
+/**
+ * Rata-rata Bayesian: tarik `value` (dari n observasi)
+ * ke arah `prior` dengan bobot PRIORITY_PRIOR_OBSERVATIONS.
+ * n besar -> hampir sama dengan value; n kecil -> dekat prior.
+ */
+function dashboardShrink(value, n, prior) {
+
+  var k =
+    Number(DASHBOARD_CONFIG.PRIORITY_PRIOR_OBSERVATIONS) || 0;
+
+  var v =
+    Number(value);
+
+  n = Number(n) || 0;
+
+  if (!isFinite(v)) {
+    return prior;
+  }
+
+  if (!isFinite(prior) || k <= 0 || n + k <= 0) {
+    return v;
+  }
+
+  return (n * v + k * prior) / (n + k);
+
+}
+
+
+/**
+ * Prior untuk dashboardShrink: rata-rata skor seluruh
+ * observasi parameter dan proporsi observasi < BORDERLINE.
+ */
+function dashboardPriorFromRows(rows) {
+
+  var sum = 0;
+  var low = 0;
+  var count = 0;
+  var limit = dashboardThresholds().BORDERLINE_PASS;
+
+  (rows || []).forEach(function(row) {
+
+    var score = Number(row.score);
+
+    if (!isFinite(score)) {
+      return;
+    }
+
+    sum += score;
+    count += 1;
+
+    if (score < limit) {
+      low += 1;
+    }
+
+  });
+
+  return {
+    score: count ? sum / count : NaN,
+    lowRate: count ? low / count : NaN
+  };
 
 }
 
@@ -2167,14 +2242,21 @@ const DashboardAnalytics = {
           )
         ),
 
+      /* Semua produk dalam audit (audit multi-produk),
+         bukan hanya produk baris pertama. */
       productCount:
         uniqueCount(
-          audits.map(
-            function(audit) {
+          [].concat.apply(
+            [],
+            audits.map(
+              function(audit) {
 
-              return audit.product;
+                return audit.products && audit.products.length
+                  ? audit.products
+                  : [audit.product];
 
-            }
+              }
+            )
           )
         ),
 
@@ -3623,6 +3705,10 @@ const DashboardAnalytics = {
       );
 
 
+    const prior =
+      dashboardPriorFromRows(data);
+
+
     return attributes
       .map(
         function(item) {
@@ -3633,21 +3719,33 @@ const DashboardAnalytics = {
            * standar Kintoun.
            */
 
+          /*
+           * Skor & low-score rate disesuaikan dengan jumlah
+           * observasi (rata-rata Bayesian): makin sedikit
+           * observasi, makin ditarik ke rata-rata keseluruhan.
+           * Tanpa ini, parameter yang baru dinilai 1x dengan
+           * skor jelek langsung menjadi prioritas teratas.
+           */
+          const n =
+            Number(item.observations) || 0;
+
+          const adjustedScore =
+            dashboardShrink(item.score, n, prior.score);
+
+          const lowScoreRate =
+            dashboardShrink(item.lowScoreRate / 100, n, prior.lowRate);
+
           const gapFromHighPass =
             Math.max(
               0,
               dashboardThresholds().HIGH_PASS -
-                item.score
+                adjustedScore
             );
-
-
-          const lowScoreRate =
-            item.lowScoreRate / 100;
 
 
           const gradeWeight =
             dashboardGradeWeight(
-              item.grade
+              dashboardGetGrade(adjustedScore)
             );
 
 
@@ -3692,6 +3790,11 @@ const DashboardAnalytics = {
             gradeWeight:
               gradeWeight,
 
+            adjustedScore:
+              dashboardRound(
+                adjustedScore
+              ),
+
             gapFromHighPass:
               dashboardRound(
                 gapFromHighPass
@@ -3733,26 +3836,33 @@ const DashboardAnalytics = {
       );
 
 
+    const prior =
+      dashboardPriorFromRows(data);
+
+
     return items
       .map(
         function(item) {
 
+          const audits =
+            item.audits || 0;
+
+
           /*
-           * Jarak ke batas HIGH PASS (4.50), bukan ke
-           * skor maksimum 5.00 — konsisten dengan
-           * standar Kintoun.
+           * Sama seperti level parameter: skor disesuaikan
+           * dengan jumlah penilaian item (rata-rata Bayesian)
+           * sebelum dihitung jaraknya ke HIGH PASS (4.50).
            */
+
+          const adjustedScore =
+            dashboardShrink(item.score, audits, prior.score);
 
           const gapFromHighPass =
             Math.max(
               0,
               dashboardThresholds().HIGH_PASS -
-                item.score
+                adjustedScore
             );
-
-
-          const audits =
-            item.audits || 0;
 
 
           /*
@@ -3784,14 +3894,18 @@ const DashboardAnalytics = {
 
 
           const lowRate =
-            totalParameters
-              ? lowParameters / totalParameters
-              : 0;
+            dashboardShrink(
+              totalParameters
+                ? lowParameters / totalParameters
+                : 0,
+              totalParameters,
+              prior.lowRate
+            );
 
 
           const gradeWeight =
             dashboardGradeWeight(
-              item.grade
+              dashboardGetGrade(adjustedScore)
             );
 
 
@@ -3840,6 +3954,11 @@ const DashboardAnalytics = {
 
             gradeWeight:
               gradeWeight,
+
+            adjustedScore:
+              dashboardRound(
+                adjustedScore
+              ),
 
             gapFromHighPass:
               dashboardRound(
