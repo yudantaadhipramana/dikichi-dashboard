@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 
 <head>
 
@@ -1077,6 +1077,52 @@
 
 
       <!-- =================================================
+           FOLLOW-UP (fase 4)
+           ================================================= -->
+
+      <section
+        class="panel follow-up"
+        aria-labelledby="followUpTitle"
+      >
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="eyebrow">
+              ACTION LIST
+            </div>
+
+            <h2 id="followUpTitle">
+              Perlu Tindak Lanjut
+            </h2>
+
+            <p class="panel-description">
+              Audit terbaru dengan parameter di bawah
+              standar (skor &lt; 3.00), lengkap dengan
+              catatan dan foto evidence. Mengikuti filter.
+            </p>
+
+          </div>
+
+        </div>
+
+        <div
+          id="followUpList"
+          class="follow-up-list"
+          aria-live="polite"
+        >
+
+          <div class="table-loading">
+            Waiting for dashboard data...
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
            AUDIT EXPLORER
            ================================================= -->
 
@@ -1112,8 +1158,9 @@
             class="panel-action"
             type="button"
             onclick="downloadMasterDikichi()"
+            title="Unduh CSV per parameter sesuai filter aktif"
           >
-            Download Data
+            Download CSV
           </button>
 
 
