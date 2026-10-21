@@ -5339,6 +5339,18 @@ const DashboardAnalytics = {
                     );
 
 
+                    /* Jumlah penilaian per sel, supaya
+                       frontend bisa menandai sampel kecil. */
+                    const counts = {};
+
+                    months.forEach(
+                      function(m) {
+                        counts[m] =
+                          src.counts[m] || 0;
+                      }
+                    );
+
+
                     return {
 
                       item:
@@ -5346,6 +5358,9 @@ const DashboardAnalytics = {
 
                       scores:
                         scores,
+
+                      counts:
+                        counts,
 
                       auditCount:
                         months.reduce(
@@ -5476,9 +5491,19 @@ const DashboardAnalytics = {
             );
 
 
+            const counts = {};
+
+            months.forEach(
+              function(m) {
+                counts[m] =
+                  src.counts[m] || 0;
+              }
+            );
+
             return {
               branch: name,
-              scores: scores
+              scores: scores,
+              counts: counts
             };
 
           }

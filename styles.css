@@ -6715,3 +6715,132 @@ th.sort-desc::after {
   color: #6D5975;
   opacity: 1;
 }
+
+
+/* =========================================================
+   FASE 4 — jumlah sampel per sel heatmap
+   ========================================================= */
+
+.mx-cell .mx-n {
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  opacity: 0.7;
+  line-height: 1.1;
+}
+
+.mx-cell.mx-low-n {
+  opacity: 0.5;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35) 0 4px,
+    transparent 4px 8px
+  );
+}
+
+
+/* =========================================================
+   FASE 4 — Perlu Tindak Lanjut
+   ========================================================= */
+
+.fu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.fu-card {
+  border: 1px solid rgba(87, 43, 122, 0.14);
+  border-left: 4px solid #D92755;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #fff;
+}
+
+.fu-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.fu-branch {
+  font-weight: 800;
+  color: #2E1440;
+  font-size: 13px;
+}
+
+.fu-meta {
+  font-size: 11px;
+  color: #8B7E92;
+  margin-top: 2px;
+}
+
+.fu-item + .fu-item {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(87, 43, 122, 0.14);
+}
+
+.fu-item-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #572B7A;
+}
+
+.fu-params {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fu-params li {
+  font-size: 11px;
+  background: #F7F3F9;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.fu-param {
+  color: #2E1440;
+}
+
+.fu-score {
+  font-weight: 800;
+  margin-left: 4px;
+}
+
+.fu-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #4A3A55;
+  line-height: 1.45;
+}
+
+.fu-docs {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.fu-evidence {
+  font-size: 12px;
+  font-weight: 700;
+  color: #C2187D;
+}
+
+.fu-more {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: #8B7E92;
+}
+
+@media (max-width: 640px) {
+  .fu-grid {
+    grid-template-columns: 1fr;
+  }
+}

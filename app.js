@@ -687,6 +687,7 @@ function loadAuditsLazy() {
       }
 
       renderRecentAudits(audits);
+      renderFollowUps(audits);
 
     })
 
@@ -984,7 +985,10 @@ function matrixMonthsIn(months, year) {
 
 }
 
-function matrixCell(value) {
+/* Sel dengan sampel di bawah ini ditampilkan samar. */
+var MATRIX_MIN_SAMPLE = 3;
+
+function matrixCell(value, count) {
 
   if (value === null || value === undefined || !isFinite(Number(value))) {
 
@@ -1002,8 +1006,14 @@ function matrixCell(value) {
     "STRONG FAIL":      "mx-fl"
   }[grade] || "";
 
-  return '<td class="mx-cell ' + cls + '" title="' + grade + '">' +
-    Number(value).toFixed(2) + "</td>";
+  var hasCount = count !== undefined && count !== null && isFinite(Number(count));
+  var low = hasCount && Number(count) < MATRIX_MIN_SAMPLE;
+  var title = grade + (hasCount ? " \u00b7 n=" + count + (low ? " (sampel kecil)" : "") : "");
+
+  return '<td class="mx-cell ' + cls + (low ? " mx-low-n" : "") + '" title="' + title + '">' +
+    Number(value).toFixed(2) +
+    (hasCount ? '<span class="mx-n">n=' + count + "</span>" : "") +
+    "</td>";
 
 }
 
@@ -1103,7 +1113,7 @@ function renderItemMatrix(matrix) {
       html.push('<td class="mx-item">' + escapeHtml(row.item) + "</td>");
 
       months.forEach(function(m) {
-        html.push(matrixCell(row.scores ? row.scores[m] : null));
+        html.push(matrixCell(row.scores ? row.scores[m] : null, row.counts ? row.counts[m] : null));
       });
 
       html.push("</tr>");
@@ -1174,7 +1184,7 @@ function renderBranchMatrix(matrix) {
 
     months.forEach(function(m) {
       /* Skala 1–5, sama dengan heatmap produk dan Quality Standard. */
-      html.push(matrixCell(row.scores ? row.scores[m] : null));
+      html.push(matrixCell(row.scores ? row.scores[m] : null, row.counts ? row.counts[m] : null));
     });
 
     html.push("</tr>");
@@ -2318,6 +2328,8 @@ function getSelectedTrend() {
 }
 
 
+var BORDERLINE_LINE = 3.00;
+
 function renderQualityTrend(
   trend
 ) {
@@ -2445,6 +2457,13 @@ function renderQualityTrend(
   );
 
 
+  /* Garis standar: di bawah 3.00 = di bawah Borderline Pass. */
+  dataTable.addColumn(
+    "number",
+    "Standar 3.00"
+  );
+
+
   normalized.forEach(
     function(item, i) {
 
@@ -2467,7 +2486,9 @@ function renderQualityTrend(
             item
           ),
 
-          smaValues[i]
+          smaValues[i],
+
+          BORDERLINE_LINE
 
         ]
       );
@@ -2501,6 +2522,14 @@ function renderQualityTrend(
           lineWidth: 2,
           pointSize: 4,
           pointShape: "circle"
+        },
+        2: {
+          type: "line",
+          color: "#D92755",
+          lineWidth: 1.5,
+          lineDashStyle: [6, 4],
+          pointSize: 0,
+          enableInteractivity: false
         }
       },
 
@@ -6544,33 +6573,157 @@ function dhToggle(id) {
   }
 }
 
+/*
+ * Download CSV (fase 4): dibuat di browser dari audit yang
+ * sedang tampil (sudah mengikuti filter), satu baris per
+ * parameter. Pengunjung anonim tidak perlu akses ke sheet,
+ * dan sheet sumber tidak perlu dibagikan.
+ */
 function downloadMasterDikichi() {
 
-  google.script.run
+  var audits = Array.isArray(DashboardState.audits)
+    ? DashboardState.audits
+    : (DashboardState.data && Array.isArray(DashboardState.data.audits)
+        ? DashboardState.data.audits
+        : null);
 
-    .withSuccessHandler(function(url) {
+  if (!audits) {
+    alert("Data audit masih dimuat, coba lagi sebentar.");
+    return;
+  }
 
-      if (!url) return;
+  function cell(v) {
+    var t = v === null || v === undefined ? "" : String(v);
+    /* Cegah formula injection saat dibuka di Excel/Sheets. */
+    if (/^[=+\-@]/.test(t)) t = "'" + t;
+    return '"' + t.replace(/"/g, '""') + '"';
+  }
 
-      // Cross-origin URL: anchor.download ignored by browser.
-      // window.open triggers download because Google returns
-      // Content-Disposition: attachment for /export?format=xlsx
-      window.open(url, "_blank");
+  var lines = [[
+    "audit_id", "tanggal", "cabang", "auditor", "produk", "item",
+    "parameter", "skor", "grade", "skor_audit", "grade_audit",
+    "catatan_item", "evidence"
+  ].join(",")];
 
-    })
+  audits.forEach(function(audit) {
+    var notes = audit.itemNotes || {};
+    (audit.attributes || []).forEach(function(attr) {
+      lines.push([
+        audit.auditId,
+        audit.dateKey || audit.timestamp,
+        audit.branch || audit.outlet,
+        audit.auditor || audit.name,
+        attr.product || audit.product,
+        attr.item,
+        attr.attribute,
+        attr.score,
+        dashboardGrade(Number(attr.score)),
+        audit.score,
+        audit.grade,
+        notes[attr.item || ""] || "",
+        audit.documentation || ""
+      ].map(cell).join(","));
+    });
+  });
 
-    .withFailureHandler(function(err) {
-
-      alert(
-        "Download gagal: " +
-        (err && err.message ? err.message : String(err))
-      );
-
-    })
-
-    .getMasterDikichiDownloadUrl();
+  var blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "dikichi-audit-" + new Date().toISOString().slice(0, 10) + ".csv";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function() {
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }, 1000);
 
 }
+
+
+/*
+ * Perlu Tindak Lanjut (fase 4): audit terbaru yang punya
+ * parameter < BORDERLINE (3.00), dikelompokkan per audit.
+ */
+var FOLLOW_UP_LIMIT = 6;
+
+function renderFollowUps(audits) {
+
+  var host = document.getElementById("followUpList");
+  if (!host) return;
+
+  var list = (Array.isArray(audits) ? audits : [])
+    .map(function(audit) {
+      var low = (audit.attributes || []).filter(function(attr) {
+        var v = Number(attr.score);
+        return isFinite(v) && v < BORDERLINE_LINE;
+      });
+      return { audit: audit, low: low };
+    })
+    .filter(function(x) { return x.low.length > 0; })
+    .sort(function(a, b) {
+      return new Date(b.audit.timestamp).getTime() - new Date(a.audit.timestamp).getTime();
+    });
+
+  if (!list.length) {
+    host.innerHTML = createNoDataState(
+      "Tidak ada temuan di bawah standar",
+      "Semua parameter pada filter ini bernilai 3.00 atau lebih."
+    );
+    return;
+  }
+
+  var shown = list.slice(0, FOLLOW_UP_LIMIT);
+
+  var html = shown.map(function(x) {
+    var audit = x.audit;
+    var notes = audit.itemNotes || {};
+    var byItem = {};
+    x.low.forEach(function(attr) {
+      var key = attr.item || "";
+      (byItem[key] = byItem[key] || []).push(attr);
+    });
+
+    var items = Object.keys(byItem).map(function(item) {
+      var params = byItem[item]
+        .sort(function(a, b) { return Number(a.score) - Number(b.score); })
+        .map(function(attr) {
+          var v = Number(attr.score);
+          return '<li><span class="fu-param">' + escapeHtml(attr.attribute || "\u2014") + '</span> ' +
+            '<span class="fu-score ' + getScoreClass(v) + '">' + formatScore(v) + '</span></li>';
+        }).join("");
+      var note = notes[item] ? '<p class="fu-note">' + escapeHtml(notes[item]) + '</p>' : "";
+      return '<div class="fu-item"><div class="fu-item-name">' + escapeHtml(item || "\u2014") + '</div>' +
+        '<ul class="fu-params">' + params + '</ul>' + note + '</div>';
+    }).join("");
+
+    var docs = String(audit.documentation || "")
+      .split(",")
+      .map(function(d) { return d.trim(); })
+      .filter(function(d) { return /^https?:\/\//i.test(d); })
+      .map(function(d, i) {
+        return '<a class="fu-evidence" href="' + escapeHtml(d) + '" target="_blank" rel="noopener">Foto ' + (i + 1) + '</a>';
+      }).join(" ");
+
+    return '<article class="fu-card">' +
+      '<header class="fu-head">' +
+        '<div><div class="fu-branch">' + escapeHtml(audit.branch || audit.outlet || "\u2014") + '</div>' +
+        '<div class="fu-meta">' + formatDateTime(audit.timestamp) + ' \u00b7 ' + escapeHtml(audit.auditId || "") +
+        ' \u00b7 ' + escapeHtml(audit.auditor || audit.name || "") + '</div></div>' +
+        createGradeBadge(audit.grade || dashboardGrade(Number(audit.score))) +
+      '</header>' +
+      items +
+      (docs ? '<div class="fu-docs">' + docs + '</div>' : "") +
+    '</article>';
+  }).join("");
+
+  var more = list.length > shown.length
+    ? '<p class="fu-more">+' + (list.length - shown.length) + ' audit lain dengan temuan di bawah standar. Lihat Audit Explorer di bawah atau unduh CSV.</p>'
+    : "";
+
+  host.innerHTML = '<div class="fu-grid">' + html + '</div>' + more;
+
+}
+
 
 function openGradeDetailPopup(grade) {
 
