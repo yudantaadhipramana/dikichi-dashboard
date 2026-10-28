@@ -400,6 +400,9 @@
            QUALITY STANDARD
            ================================================= -->
 
+      <div id="dashboardTabsMount"></div>
+      <div id="dashboardLayoutContent">
+
       <section class="quality-standard">
 
 
@@ -506,7 +509,7 @@
            MONTHLY PERFORMANCE MATRIX (TABLE A + B)
            ================================================= -->
 
-      <section class="dashboard-section">
+      <section class="dashboard-section" id="monthlyItemSection">
 
         <div class="section-title-block">
           <div class="eyebrow">
@@ -555,7 +558,7 @@
 
       </section>
 
-      <section class="dashboard-section">
+      <section class="dashboard-section" id="monthlyOutletSection">
 
         <div class="section-title-block">
           <div class="eyebrow">
@@ -615,7 +618,7 @@
            QUALITY TREND
            ================================================= -->
 
-      <section class="dashboard-section">
+      <section class="dashboard-section" id="visualAuditTrend">
 
 
         <div
@@ -716,7 +719,7 @@
            PRODUCT SCORE TREND
            ================================================= -->
 
-      <section class="dashboard-section">
+      <section class="dashboard-section" id="visualProductTrend">
 
         <div class="panel chart-panel">
 
@@ -805,7 +808,7 @@
            QUALITY ATTENTION
            ================================================= -->
 
-      <section class="panel">
+      <section class="panel" id="qualityPrioritiesSection">
 
 
         <div class="panel-header">
@@ -857,7 +860,7 @@
            PRODUCT PERFORMANCE + GRADE DISTRIBUTION (side-by-side)
            ================================================= -->
 
-      <section class="dashboard-section">
+      <section class="dashboard-section" id="productGradeSection">
 
         <div class="product-grade-grid">
 
@@ -968,10 +971,10 @@
 
 
       <!-- =================================================
-           OUTLET PERFORMANCE
+           ITEM PERFORMANCE
            ================================================= -->
 
-      <section class="panel">
+      <section class="panel" id="itemRankingSection">
 
 
         <div class="panel-header">
@@ -1031,7 +1034,7 @@
            OUTLET / BRANCH PERFORMANCE
            ================================================= -->
 
-      <section class="panel">
+      <section class="panel" id="outletRankingSection">
 
 
         <div class="panel-header">
@@ -1082,6 +1085,7 @@
 
       <section
         class="panel follow-up"
+        id="followUpSection"
         aria-labelledby="followUpTitle"
       >
 
@@ -1107,6 +1111,8 @@
 
         </div>
 
+        <div class="fu-toolbar" id="followUpToolbar" aria-label="Filter dan pengurutan Action List"></div>
+        <div id="followUpSummary" class="fu-summary" aria-live="polite"></div>
         <div
           id="followUpList"
           class="follow-up-list"
@@ -1128,6 +1134,7 @@
 
       <section
         class="panel audit-explorer"
+        id="recentAuditsSection"
       >
 
 
@@ -1181,7 +1188,7 @@
 
       </section>
 
-
+      </div>
     </main>
 
 

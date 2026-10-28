@@ -54,7 +54,11 @@ const DashboardState = {
 
   kpiProductRows: 0,
 
-  kpiProductRecheck: false
+  kpiProductRecheck: false,
+  dashboardView: "overview",
+  followUpPage: 0,
+  followUpFilters: { outlet: "", product: "", item: "", attribute: "", from: "", to: "" },
+  followUpSort: "date-desc"
 
 };
 
@@ -71,6 +75,151 @@ document.addEventListener(
 
   }
 );
+
+
+function installDashboardLayout() {
+
+  var mount = document.getElementById("dashboardTabsMount");
+  var content = document.getElementById("dashboardLayoutContent");
+  if (!mount || !content || document.getElementById("overviewView")) return;
+
+  mount.innerHTML =
+    '<div id="dashboardViewTabs" class="dashboard-view-tabs" role="tablist" aria-label="Dashboard views">' +
+      '<button type="button" role="tab" id="overviewTab" aria-controls="overviewView" aria-selected="true" tabindex="0" data-view="overview">Overview</button>' +
+      '<button type="button" role="tab" id="visualizationsTab" aria-controls="visualizationsView" aria-selected="false" tabindex="-1" data-view="visualizations">Visualisasi</button>' +
+    '</div>';
+
+  var overview = document.createElement("div");
+  overview.id = "overviewView";
+  overview.className = "dashboard-view";
+  overview.setAttribute("role", "tabpanel");
+  overview.setAttribute("aria-labelledby", "overviewTab");
+
+  var visual = document.createElement("div");
+  visual.id = "visualizationsView";
+  visual.className = "dashboard-view";
+  visual.setAttribute("role", "tabpanel");
+  visual.setAttribute("aria-labelledby", "visualizationsTab");
+  visual.hidden = true;
+  mount.after(overview, visual);
+
+  var quality = document.getElementById("qualityPrioritiesSection");
+  if (quality) quality.remove();
+
+  var productSection = document.getElementById("productGradeSection");
+  var productPanel = productSection && productSection.querySelector(".product-panel");
+  var gradePanel = productSection && productSection.querySelector(".grade-panel");
+  var itemSection = document.getElementById("itemRankingSection");
+
+  [".quality-standard", ".kpi-grid", "monthlyItemSection", "monthlyOutletSection", "itemRankingSection", "outletRankingSection", "recentAuditsSection"].forEach(function(selector) {
+    var node = selector.charAt(0) === "." ? content.querySelector(selector) : document.getElementById(selector);
+    if (node) overview.appendChild(node);
+  });
+
+  var actionList = document.getElementById("followUpSection");
+  var outletMonth = document.getElementById("monthlyOutletSection");
+  if (actionList && outletMonth) outletMonth.after(actionList);
+
+  if (itemSection && productPanel) {
+    var disclosure = document.createElement("details");
+    disclosure.className = "product-ranking-disclosure";
+    disclosure.innerHTML = '<summary aria-expanded="false">Tampilkan Product Performance</summary><div class="product-ranking-body"></div>';
+    disclosure.querySelector(".product-ranking-body").appendChild(productPanel);
+    itemSection.after(disclosure);
+    disclosure.addEventListener("toggle", function() {
+      disclosure.querySelector("summary").setAttribute("aria-expanded", String(disclosure.open));
+      disclosure.querySelector("summary").textContent = disclosure.open ? "Sembunyikan Product Performance" : "Tampilkan Product Performance";
+    });
+  }
+
+  ["visualAuditTrend", "visualProductTrend"].forEach(function(id) {
+    var node = document.getElementById(id);
+    if (node) visual.appendChild(node);
+  });
+  if (gradePanel) visual.appendChild(gradePanel);
+  if (productSection) productSection.remove();
+
+  var scenario = document.createElement("section");
+  scenario.className = "panel what-if-panel";
+  scenario.setAttribute("aria-labelledby", "whatIfTitle");
+  scenario.innerHTML = '<div class="panel-header"><div><div class="eyebrow">WHAT-IF</div><h2 id="whatIfTitle">Simulasi parameter</h2><p class="panel-description">Simulasi, bukan prediksi. Mengubah skor parameter terpilih lalu menghitung ulang rerata item per audit.</p></div></div><div class="what-if-controls"><label>Parameter<select id="whatIfParameter"><option value="">Pilih parameter</option></select></label><label>Skor simulasi<select id="whatIfScore"><option value="3">3.00</option><option value="3.5">3.50</option><option value="4">4.00</option><option value="4.5">4.50</option><option value="5">5.00</option></select></label></div><div id="whatIfResult" aria-live="polite">Muat data audit untuk menjalankan simulasi.</div>';
+  visual.appendChild(scenario);
+
+  function selectView(view) {
+    var showVisual = view === "visualizations";
+    DashboardState.dashboardView = view;
+    overview.hidden = showVisual;
+    visual.hidden = !showVisual;
+    mount.querySelectorAll("[role=tab]").forEach(function(tab) {
+      var active = tab.dataset.view === view;
+      tab.setAttribute("aria-selected", String(active));
+      tab.tabIndex = active ? 0 : -1;
+    });
+    if (showVisual) {
+      populateWhatIfParameters();
+      renderWhatIfResult();
+      if (DashboardState.chartsReady && DashboardState.data) {
+        requestAnimationFrame(function() { renderCharts(DashboardState.data); });
+      }
+    }
+  }
+
+  function populateWhatIfParameters() {
+    var control = document.getElementById("whatIfParameter");
+    if (!control || control.options.length > 1) return;
+    var names = {};
+    (DashboardState.audits || []).forEach(function(audit) {
+      (audit.attributes || []).forEach(function(row) {
+        if (row.attribute) names[row.attribute] = true;
+      });
+    });
+    Object.keys(names).sort().forEach(function(name) {
+      var option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      control.appendChild(option);
+    });
+  }
+
+  function renderWhatIfResult() {
+    var result = document.getElementById("whatIfResult");
+    var parameter = document.getElementById("whatIfParameter");
+    var target = document.getElementById("whatIfScore");
+    if (!result || !parameter || !target) return;
+    var audits = DashboardState.audits || [];
+    if (!audits.length) {
+      result.textContent = "Audit belum tersedia.";
+      return;
+    }
+    var before = simulateParameterScenario(audits, "", 0);
+    var after = parameter.value ? simulateParameterScenario(audits, parameter.value, Number(target.value)) : null;
+    result.textContent = parameter.value
+      ? "Rerata item saat ini " + formatScore(before) + " · skenario " + formatScore(after) + " · perubahan " + (after - before >= 0 ? "+" : "") + formatScore(after - before) + ". Simulasi, bukan prediksi."
+      : "Pilih parameter untuk melihat skenario. Rerata saat ini: " + formatScore(before) + ". Simulasi, bukan prediksi.";
+  }
+
+  visual.addEventListener("change", function(event) {
+    if (event.target.id === "whatIfParameter" || event.target.id === "whatIfScore") renderWhatIfResult();
+  });
+  document.addEventListener("dashboardAuditsReady", function() {
+    if (DashboardState.dashboardView === "visualizations") {
+      populateWhatIfParameters();
+      renderWhatIfResult();
+    }
+  });
+
+  mount.addEventListener("click", function(event) {
+    var tab = event.target.closest("[data-view]");
+    if (tab) selectView(tab.dataset.view);
+  });
+  mount.addEventListener("keydown", function(event) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    var view = event.key === "ArrowRight" ? "visualizations" : "overview";
+    selectView(view);
+    mount.querySelector('[data-view="' + view + '"]').focus();
+  });
+}
 
 
 function initializeDashboard() {
@@ -103,6 +252,7 @@ function initializeDashboard() {
    */
 
   initMultiSelectToggles();
+  installDashboardLayout();
 
 }
 
@@ -151,18 +301,11 @@ function loadGoogleCharts() {
        */
 
       if (
-        DashboardState.data
+        DashboardState.data &&
+        DashboardState.dashboardView === "visualizations"
       ) {
 
-        renderQualityTrend(
-          DashboardState.data.trend
-        );
-
-
-        renderGradeDistribution(
-          DashboardState.data
-            .gradeDistribution
-        );
+        renderCharts(DashboardState.data);
 
       }
 
@@ -688,6 +831,7 @@ function loadAuditsLazy() {
 
       renderRecentAudits(audits);
       renderFollowUps(audits);
+      document.dispatchEvent(new Event("dashboardAuditsReady"));
 
     })
 
@@ -1262,9 +1406,9 @@ function renderDashboard(
    * Charts are intentionally separated.
    */
 
-  renderCharts(
-    data
-  );
+  if (DashboardState.dashboardView === "visualizations") {
+    renderCharts(data);
+  }
 
 }
 
@@ -1706,6 +1850,22 @@ function renderProducts(products) {
    ITEM PERFORMANCE (level 2)
    ========================================================= */
 
+function renderItemAttention(item) {
+
+  var parameters = Array.isArray(item.parameters) ? item.parameters.filter(function(p) { return isFinite(Number(p.score)); }) : [];
+  if (!parameters.length) return '<span class="item-attention-empty">Parameter data unavailable</span>';
+  var min = Math.min.apply(null, parameters.map(function(p) { return Number(p.score); }));
+  var lowest = parameters.filter(function(p) { return Number(p.score) === min; });
+  var labels = lowest.map(function(p) {
+    return escapeHtml(p.attribute || '\u2014') + ' · ' + formatScore(p.score);
+  }).join(', ');
+  var lowCount = parameters.filter(function(p) { return Number(p.score) < BORDERLINE_LINE; }).length;
+  return '<span class="item-attention-main">' + labels + '</span>' +
+    (lowCount ? '<span class="item-attention-low">' + lowCount + ' parameter(s) &lt; 3.00</span>' :
+      '<span class="item-attention-ok">No parameter below 3.00</span>');
+}
+
+
 function renderItems(items) {
 
   var container = document.getElementById("itemTable");
@@ -1717,7 +1877,7 @@ function renderItems(items) {
   }
 
   var sorted = items.slice().sort(function(a, b) {
-    return Number(b.score || 0) - Number(a.score || 0);
+    return Number(a.score || 0) - Number(b.score || 0);
   });
 
   DashboardState.sortedItems = sorted;
@@ -1739,7 +1899,7 @@ function renderItems(items) {
       '<td>' + escapeHtml(item.product || '\u2014') + '</td>' +
       '<td class="prod-score-cell">' + scoreHtml + '</td>' +
       '<td>' + createGradeBadge(item.grade || dashboardGrade(score)) + '</td>' +
-      '<td class="prod-audits-cell">' + formatNumber(item.audits) + '</td>' +
+      '<td class="item-attention-cell">' + renderItemAttention(item) + '<small>' + formatNumber(item.audits) + ' audits</small></td>' +
       '</tr>';
   }).join('');
 
@@ -1752,7 +1912,7 @@ function renderItems(items) {
           '<th>Product</th>' +
           '<th style="width:110px">Score</th>' +
           '<th style="width:110px">Grade</th>' +
-          '<th style="width:60px;text-align:center">Audits</th>' +
+          '<th>Attention · parameter terendah</th>' +
         '</tr></thead>' +
         '<tbody>' + rows + '</tbody>' +
       '</table>' +
@@ -6644,84 +6804,152 @@ function downloadMasterDikichi() {
  * Perlu Tindak Lanjut (fase 4): audit terbaru yang punya
  * parameter < BORDERLINE (3.00), dikelompokkan per audit.
  */
-var FOLLOW_UP_LIMIT = 6;
+var FOLLOW_UP_PAGE_SIZE = 8;
+
+function renderFollowUpControls(audits) {
+
+  var host = document.getElementById("followUpToolbar");
+  if (!host) return;
+  var values = { outlet: {}, product: {}, item: {}, attribute: {} };
+  (Array.isArray(audits) ? audits : []).forEach(function(audit) {
+    (audit.attributes || []).forEach(function(attr) {
+      if (audit.branch || audit.outlet) values.outlet[audit.branch || audit.outlet] = true;
+      if (attr.product || audit.product) values.product[attr.product || audit.product] = true;
+      if (attr.item) values.item[attr.item] = true;
+      if (attr.attribute) values.attribute[attr.attribute] = true;
+    });
+  });
+  function select(key, label) {
+    var options = Object.keys(values[key]).sort().map(function(value) {
+      return '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</option>';
+    }).join("");
+    return '<label>' + label + '<select data-follow-filter="' + key + '"><option value="">Semua</option>' + options + '</select></label>';
+  }
+  host.innerHTML = select("outlet", "Outlet") + select("product", "Produk") + select("item", "Item") +
+    select("attribute", "Parameter") +
+    '<label>Dari<input type="date" data-follow-filter="from"></label>' +
+    '<label>Sampai<input type="date" data-follow-filter="to"></label>' +
+    '<label>Urutkan<select data-follow-sort><option value="date-desc">Tanggal · terbaru</option><option value="date-asc">Tanggal · terlama</option><option value="product-asc">Produk · A–Z</option><option value="product-desc">Produk · Z–A</option></select></label>' +
+    '<button type="button" data-follow-reset>Reset</button>';
+  host.querySelectorAll("[data-follow-filter]").forEach(function(control) {
+    control.value = DashboardState.followUpFilters[control.dataset.followFilter] || "";
+  });
+  host.querySelector("[data-follow-sort]").value = DashboardState.followUpSort;
+  bindFollowUpControls();
+}
 
 function renderFollowUps(audits) {
 
   var host = document.getElementById("followUpList");
   if (!host) return;
-
-  var list = (Array.isArray(audits) ? audits : [])
-    .map(function(audit) {
-      var low = (audit.attributes || []).filter(function(attr) {
-        var v = Number(attr.score);
-        return isFinite(v) && v < BORDERLINE_LINE;
-      });
-      return { audit: audit, low: low };
-    })
-    .filter(function(x) { return x.low.length > 0; })
-    .sort(function(a, b) {
-      return new Date(b.audit.timestamp).getTime() - new Date(a.audit.timestamp).getTime();
+  var source = Array.isArray(audits) ? audits : [];
+  renderFollowUpControls(source);
+  var f = DashboardState.followUpFilters;
+  var list = source.map(function(audit) {
+    var low = (audit.attributes || []).filter(function(attr) {
+      var v = Number(attr.score);
+      return isFinite(v) && v < BORDERLINE_LINE;
     });
+    return { audit: audit, low: low };
+  }).filter(function(row) {
+    var a = row.audit;
+    return row.low.length &&
+      (!f.outlet || String(a.branch || a.outlet || "") === f.outlet) &&
+      (!f.product && !f.item && !f.attribute || row.low.some(function(p) {
+        return (!f.product || String(p.product || a.product || "") === f.product) &&
+          (!f.item || String(p.item || "") === f.item) &&
+          (!f.attribute || String(p.attribute || "") === f.attribute);
+      })) &&
+      (!f.from || String(a.timestamp || "").slice(0, 10) >= f.from) &&
+      (!f.to || String(a.timestamp || "").slice(0, 10) <= f.to);
+  });
+  function productName(row) { return String(row.low[0].product || row.audit.product || ""); }
+  list.sort(function(a, b) {
+    if (DashboardState.followUpSort === "date-asc") return new Date(a.audit.timestamp) - new Date(b.audit.timestamp);
+    if (DashboardState.followUpSort === "product-asc") return productName(a).localeCompare(productName(b)) || new Date(b.audit.timestamp) - new Date(a.audit.timestamp);
+    if (DashboardState.followUpSort === "product-desc") return productName(b).localeCompare(productName(a)) || new Date(b.audit.timestamp) - new Date(a.audit.timestamp);
+    return new Date(b.audit.timestamp) - new Date(a.audit.timestamp);
+  });
 
+  var pages = Math.ceil(list.length / FOLLOW_UP_PAGE_SIZE);
+  DashboardState.followUpPage = Math.max(0, Math.min(DashboardState.followUpPage, Math.max(0, pages - 1)));
+  var summary = document.getElementById("followUpSummary");
+  if (summary) summary.textContent = list.length + " audit dengan temuan" + (list.length ? " · Halaman " + (DashboardState.followUpPage + 1) + " dari " + pages : "");
   if (!list.length) {
-    host.innerHTML = createNoDataState(
-      "Tidak ada temuan di bawah standar",
-      "Semua parameter pada filter ini bernilai 3.00 atau lebih."
-    );
+    host.innerHTML = createNoDataState("Tidak ada temuan di bawah standar", "Tidak ada parameter dengan skor di bawah 3.00 pada filter Action List ini.");
     return;
   }
 
-  var shown = list.slice(0, FOLLOW_UP_LIMIT);
-
-  var html = shown.map(function(x) {
-    var audit = x.audit;
-    var notes = audit.itemNotes || {};
-    var byItem = {};
-    x.low.forEach(function(attr) {
-      var key = attr.item || "";
-      (byItem[key] = byItem[key] || []).push(attr);
-    });
-
+  var shown = list.slice(DashboardState.followUpPage * FOLLOW_UP_PAGE_SIZE, (DashboardState.followUpPage + 1) * FOLLOW_UP_PAGE_SIZE);
+  var cards = shown.map(function(row) {
+    var audit = row.audit, notes = audit.itemNotes || {}, byItem = {};
+    row.low.forEach(function(attr) { var key = attr.item || ""; (byItem[key] = byItem[key] || []).push(attr); });
     var items = Object.keys(byItem).map(function(item) {
-      var params = byItem[item]
-        .sort(function(a, b) { return Number(a.score) - Number(b.score); })
-        .map(function(attr) {
-          var v = Number(attr.score);
-          return '<li><span class="fu-param">' + escapeHtml(attr.attribute || "\u2014") + '</span> ' +
-            '<span class="fu-score ' + getScoreClass(v) + '">' + formatScore(v) + '</span></li>';
-        }).join("");
-      var note = notes[item] ? '<p class="fu-note">' + escapeHtml(notes[item]) + '</p>' : "";
-      return '<div class="fu-item"><div class="fu-item-name">' + escapeHtml(item || "\u2014") + '</div>' +
-        '<ul class="fu-params">' + params + '</ul>' + note + '</div>';
+      var params = byItem[item].sort(function(a, b) { return Number(a.score) - Number(b.score); }).map(function(attr) {
+        var v = Number(attr.score);
+        return '<li><span class="fu-param">' + escapeHtml(attr.attribute || "\u2014") + '</span> <span class="fu-score ' + getScoreClass(v) + '">' + formatScore(v) + '</span></li>';
+      }).join("");
+      return '<div class="fu-item"><div class="fu-item-name">' + escapeHtml(item || "\u2014") + '</div><ul class="fu-params">' + params + '</ul>' +
+        (notes[item] ? '<p class="fu-note">' + escapeHtml(notes[item]) + '</p>' : "") + '</div>';
     }).join("");
-
-    var docs = String(audit.documentation || "")
-      .split(",")
-      .map(function(d) { return d.trim(); })
-      .filter(function(d) { return /^https?:\/\//i.test(d); })
-      .map(function(d, i) {
+    var docs = String(audit.documentation || "").split(",").map(function(d) { return d.trim(); })
+      .filter(function(d) { return /^https?:\/\//i.test(d); }).map(function(d, i) {
         return '<a class="fu-evidence" href="' + escapeHtml(d) + '" target="_blank" rel="noopener">Foto ' + (i + 1) + '</a>';
       }).join(" ");
-
-    return '<article class="fu-card">' +
-      '<header class="fu-head">' +
-        '<div><div class="fu-branch">' + escapeHtml(audit.branch || audit.outlet || "\u2014") + '</div>' +
-        '<div class="fu-meta">' + formatDateTime(audit.timestamp) + ' \u00b7 ' + escapeHtml(audit.auditId || "") +
-        ' \u00b7 ' + escapeHtml(audit.auditor || audit.name || "") + '</div></div>' +
-        createGradeBadge(audit.grade || dashboardGrade(Number(audit.score))) +
-      '</header>' +
-      items +
-      (docs ? '<div class="fu-docs">' + docs + '</div>' : "") +
-    '</article>';
+    return '<article class="fu-card"><header class="fu-head"><div><div class="fu-branch">' + escapeHtml(audit.branch || audit.outlet || "\u2014") + '</div>' +
+      '<div class="fu-meta">' + formatDateTime(audit.timestamp) + ' · ' + escapeHtml(audit.auditId || "") + ' · ' + escapeHtml(audit.auditor || audit.name || "") + '</div></div>' +
+      createGradeBadge(audit.grade || dashboardGrade(Number(audit.score))) + '</header>' + items +
+      (docs ? '<div class="fu-docs">' + docs + '</div>' : '<div class="fu-no-evidence">Evidence tidak tersedia</div>') + '</article>';
   }).join("");
+  host.innerHTML = '<div class="fu-grid">' + cards + '</div>' +
+    '<nav class="fu-pagination" aria-label="Halaman Action List"><button type="button" data-page="prev" ' + (DashboardState.followUpPage === 0 ? 'disabled' : '') + '>Sebelumnya</button><span>' + (DashboardState.followUpPage + 1) + ' / ' + pages + '</span><button type="button" data-page="next" ' + (DashboardState.followUpPage >= pages - 1 ? 'disabled' : '') + '>Berikutnya</button></nav>';
+  host.querySelector(".fu-pagination").addEventListener("click", function(event) {
+    var button = event.target.closest("[data-page]");
+    if (!button || button.disabled) return;
+    DashboardState.followUpPage += button.dataset.page === "next" ? 1 : -1;
+    renderFollowUps(source);
+  });
+}
 
-  var more = list.length > shown.length
-    ? '<p class="fu-more">+' + (list.length - shown.length) + ' audit lain dengan temuan di bawah standar. Lihat Audit Explorer di bawah atau unduh CSV.</p>'
-    : "";
+function bindFollowUpControls() {
 
-  host.innerHTML = '<div class="fu-grid">' + html + '</div>' + more;
+  var toolbar = document.getElementById("followUpToolbar");
+  if (!toolbar || toolbar.dataset.bound) return;
+  toolbar.dataset.bound = "true";
+  toolbar.addEventListener("change", function(event) {
+    var target = event.target;
+    if (target.dataset.followFilter) DashboardState.followUpFilters[target.dataset.followFilter] = target.value;
+    if (target.hasAttribute("data-follow-sort")) DashboardState.followUpSort = target.value;
+    DashboardState.followUpPage = 0;
+    renderFollowUps(DashboardState.audits || []);
+  });
+  toolbar.addEventListener("click", function(event) {
+    if (!event.target.closest("[data-follow-reset]")) return;
+    DashboardState.followUpFilters = { outlet: "", product: "", item: "", attribute: "", from: "", to: "" };
+    DashboardState.followUpSort = "date-desc";
+    DashboardState.followUpPage = 0;
+    renderFollowUps(DashboardState.audits || []);
+  });
+}
 
+function simulateParameterScenario(audits, parameter, targetScore) {
+
+  var groups = {};
+  (Array.isArray(audits) ? audits : []).forEach(function(audit) {
+    var items = {};
+    (audit.attributes || []).forEach(function(row) {
+      var key = row.item || "";
+      var score = parameter && row.attribute === parameter ? targetScore : Number(row.score);
+      if (!isFinite(score)) return;
+      (items[key] = items[key] || []).push(score);
+    });
+    Object.keys(items).forEach(function(key) {
+      var auditItemKey = String(audit.auditId || audit.timestamp || "") + "\u0001" + key;
+      (groups[auditItemKey] = groups[auditItemKey] || []).push(items[key].reduce(function(a, b) { return a + b; }, 0) / items[key].length);
+    });
+  });
+  var scores = Object.keys(groups).reduce(function(all, key) { return all.concat(groups[key]); }, []);
+  return scores.length ? scores.reduce(function(a, b) { return a + b; }, 0) / scores.length : null;
 }
 
 
