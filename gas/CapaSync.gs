@@ -34,7 +34,7 @@ function syncDikichiCapa() {
     var secret = props.getProperty("CAPA_INGEST_SECRET");
     var startAt = Date.parse(props.getProperty("CAPA_SYNC_START_AT") || "");
     var lastSuccessAt = Date.parse(props.getProperty("CAPA_SYNC_LAST_SUCCESS_AT") || "");
-    var scanFrom = Math.max(startAt, isFinite(lastSuccessAt) ? lastSuccessAt - 24 * 60 * 60 * 1000 : startAt);
+    var scanFrom = Math.max(startAt, isFinite(lastSuccessAt) ? lastSuccessAt - 14 * 24 * 60 * 60 * 1000 : startAt);
     var failed = false;
     var allProperties = props.getProperties();
     var sent = {};
@@ -42,18 +42,17 @@ function syncDikichiCapa() {
     Object.keys(allProperties).forEach(function(name) {
       if (name.indexOf("CAPA_SENT_") !== 0) return;
       if (Number(allProperties[name]) < retainedSince) props.deleteProperty(name);
-      else sent[name] = true;
+      else sent[name] = allProperties[name].split("|")[1] || "";
     });
     if (!url || !secret || !isFinite(startAt)) throw new Error("CAPA sync settings are missing");
     Object.keys(grouped).forEach(function(key) {
       var itemRows = grouped[key];
       var sentKey = "CAPA_SENT_" + Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, key)
         .map(function(byte) { return (byte + 256).toString(16).slice(-2); }).join("").slice(0, 24);
-      if (sent[sentKey]) return;
       var score = itemRows.reduce(function(sum, row) { return sum + Number(row.score); }, 0) / itemRows.length;
-      if (score >= 3) return;
       var first = itemRows[0];
       if (Date.parse(first.timestamp) < scanFrom) return;
+      if (score >= 3 && !Object.prototype.hasOwnProperty.call(sent, sentKey)) return;
       var payload = {
         auditId: first.auditId,
         outlet: first.branch,
@@ -70,6 +69,9 @@ function syncDikichiCapa() {
           };
         })
       };
+      var signature = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, JSON.stringify(payload))
+        .map(function(byte) { return (byte + 256).toString(16).slice(-2); }).join("").slice(0, 24);
+      if (sent[sentKey] === signature) return;
       var response = UrlFetchApp.fetch(url, {
         method: "post",
         contentType: "application/json",
@@ -82,7 +84,7 @@ function syncDikichiCapa() {
         failed = true;
         console.error("CAPA sync failed for audit " + first.auditId + " (" + status + ")");
       }
-      else props.setProperty(sentKey, String(Date.now()));
+      else props.setProperty(sentKey, String(Date.now()) + "|" + signature);
     });
     if (!failed) props.setProperty("CAPA_SYNC_LAST_SUCCESS_AT", new Date().toISOString());
   } finally {
